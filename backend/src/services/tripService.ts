@@ -1,0 +1,75 @@
+import { prisma } from "../db";
+
+export async function isTripMember(tripId: string, userId: string): Promise<boolean> {
+  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+  if (!trip) return false;
+  if (trip.creatorId === userId) return true;
+  const collab = await prisma.tripCollaborator.findUnique({
+    where: { tripId_userId: { tripId, userId } },
+  });
+  return !!collab;
+}
+
+export async function getFullTrip(tripId: string) {
+  return prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      creator: { select: { id: true, name: true, email: true, avatarColor: true } },
+      collaborators: {
+        include: { user: { select: { id: true, name: true, email: true, avatarColor: true } } },
+      },
+      places: {
+        orderBy: [{ day: "asc" }, { order: "asc" }],
+        include: {
+          place: true,
+          addedBy: { select: { id: true, name: true, avatarColor: true } },
+        },
+      },
+    },
+  });
+}
+
+export async function addPlaceToTrip(tripId: string, placeId: string, userId: string, day = 1) {
+  const existing = await prisma.tripPlace.findUnique({
+    where: { tripId_placeId: { tripId, placeId } },
+  });
+  if (existing) return existing;
+
+  const countForDay = await prisma.tripPlace.count({ where: { tripId, day } });
+  return prisma.tripPlace.create({
+    data: { tripId, placeId, day, order: countForDay, addedById: userId },
+    include: { place: true, addedBy: { select: { id: true, name: true, avatarColor: true } } },
+  });
+}
+
+export async function removePlaceFromTrip(tripId: string, tripPlaceId: string) {
+  return prisma.tripPlace.deleteMany({ where: { id: tripPlaceId, tripId } });
+}
+
+export interface ReorderItem {
+  tripPlaceId: string;
+  day: number;
+  order: number;
+}
+
+export async function reorderTripPlaces(tripId: string, items: ReorderItem[]) {
+  await prisma.$transaction(
+    items.map((item) =>
+      prisma.tripPlace.update({
+        where: { id: item.tripPlaceId },
+        data: { day: item.day, order: item.order },
+      })
+    )
+  );
+  return getFullTrip(tripId);
+}
+
+export function estimateDailySpend(travelStyle: string, travelerCount: number): number {
+  const perPersonBase: Record<string, number> = {
+    chill: 3200,
+    "cost-saving": 1900,
+    backpacking: 1100,
+  };
+  const base = perPersonBase[travelStyle] ?? 1900;
+  return base * Math.max(travelerCount, 1);
+}

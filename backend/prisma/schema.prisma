@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String             @id @default(cuid())
+  email        String             @unique
+  passwordHash String
+  name         String
+  avatarColor  String             @default("#EF4444")
+  createdAt    DateTime           @default(now())
+  createdTrips Trip[]             @relation("TripCreator")
+  collabs      TripCollaborator[]
+  addedPlaces  TripPlace[]
+}
+
+model Trip {
+  id              String             @id @default(cuid())
+  title           String
+  destination     String
+  destinationLat  Float?
+  destinationLng  Float?
+  startDate       DateTime
+  endDate         DateTime
+  travelStyle     String             @default("cost-saving")
+  travelerCount   Int                @default(1)
+  status          String             @default("planning")
+  completedAt     DateTime?
+  askedCompletion Boolean            @default(false)
+  creatorId       String
+  creator         User               @relation("TripCreator", fields: [creatorId], references: [id])
+  collaborators   TripCollaborator[]
+  places          TripPlace[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+
+model TripCollaborator {
+  id       String   @id @default(cuid())
+  tripId   String
+  trip     Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  role     String   @default("editor")
+  joinedAt DateTime @default(now())
+
+  @@unique([tripId, userId])
+}
+
+model Place {
+  id            String      @id @default(cuid())
+  destination   String
+  name          String
+  neighborhood  String?
+  category      String?
+  rating        Float       @default(4.5)
+  durationLabel String      @default("1-2 hrs")
+  lat           Float
+  lng           Float
+  imageUrl      String?
+  isHiddenGem   Boolean     @default(false)
+  tripPlaces    TripPlace[]
+}
+
+model TripPlace {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  placeId   String
+  place     Place    @relation(fields: [placeId], references: [id])
+  day       Int      @default(1)
+  order     Int      @default(0)
+  addedById String?
+  addedBy   User?    @relation(fields: [addedById], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([tripId, placeId])
+}
