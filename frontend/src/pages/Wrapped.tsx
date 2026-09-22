@@ -6,6 +6,7 @@ import StatTile from "../components/StatTile";
 import WrappedCircuitMap from "../components/WrappedCircuitMap";
 import WrappedShareCard from "../components/WrappedShareCard";
 import { travelStyleLabel } from "../constants/travelStyles";
+import { destinationLabel } from "../constants/destinations";
 
 const TRAVELER_LABEL: Record<string, string> = {
   backpacking: "Backpacker",
@@ -109,7 +110,7 @@ export default function Wrapped() {
                 </span>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-ink-900">{t.title}</p>
-                  <p className="text-xs capitalize text-ink-500">{t.destination}</p>
+                  <p className="text-xs text-ink-500">{destinationLabel(t.destination)}</p>
                 </div>
                 <span className="text-xs text-ink-500">
                   {new Date(t.startDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}

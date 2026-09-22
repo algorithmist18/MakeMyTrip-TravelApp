@@ -6,6 +6,7 @@ import CreateTripModal from "../components/CreateTripModal";
 import TripCompletionPrompt from "../components/TripCompletionPrompt";
 import { useAuth } from "../context/AuthContext";
 import { travelStyleLabel } from "../constants/travelStyles";
+import { destinationLabel } from "../constants/destinations";
 
 function TripCard({ trip }: { trip: Trip }) {
   const nights = Math.max(
@@ -20,7 +21,7 @@ function TripCard({ trip }: { trip: Trip }) {
       <div className="flex h-28 items-end bg-gradient-to-br from-brand-500 to-brand-700 p-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
-            {trip.destination}
+            {destinationLabel(trip.destination)}
           </p>
           <h3 className="text-lg font-bold text-white">{trip.title}</h3>
         </div>

@@ -1,4 +1,5 @@
 import { Trip } from "../types";
+import { destinationLabel } from "../constants/destinations";
 
 interface Props {
   trip: Trip;
@@ -15,7 +16,7 @@ export default function TripCompletionPrompt({ trip, onAnswer, busy }: Props) {
         </div>
         <h2 className="text-lg font-bold text-ink-900">Did you go on "{trip.title}"?</h2>
         <p className="mt-1 text-sm text-ink-500">
-          Your {trip.destination} trip was scheduled to wrap up on{" "}
+          Your {destinationLabel(trip.destination)} trip was scheduled to wrap up on{" "}
           {new Date(trip.endDate).toLocaleDateString()}. Let us know so we can add it to your travel year.
         </p>
         <div className="mt-5 flex gap-3">

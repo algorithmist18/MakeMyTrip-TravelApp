@@ -1,5 +1,6 @@
 import { GoogleMap, Marker, Polyline, useJsApiLoader } from "@react-google-maps/api";
 import { WrappedCircuitPoint } from "../types";
+import { destinationLabel } from "../constants/destinations";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const containerStyle = { width: "100%", height: "100%" };
@@ -26,7 +27,7 @@ export default function WrappedCircuitMap({ circuit }: Props) {
         <ol className="mt-2 space-y-1 text-left text-sm">
           {circuit.map((c, idx) => (
             <li key={c.tripId}>
-              {idx + 1}. {c.title} — {c.destination}
+              {idx + 1}. {c.title} — {destinationLabel(c.destination)}
             </li>
           ))}
         </ol>

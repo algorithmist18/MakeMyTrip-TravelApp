@@ -1,12 +1,7 @@
 import { FormEvent, useState } from "react";
 import { TravelStyle } from "../types";
 import { TRAVEL_STYLES } from "../constants/travelStyles";
-
-export const DESTINATIONS = [
-  { key: "bangkok", label: "Bangkok, Thailand", lat: 13.7563, lng: 100.5018 },
-  { key: "goa", label: "Goa, India", lat: 15.2993, lng: 74.124 },
-  { key: "manali", label: "Manali, India", lat: 32.2432, lng: 77.1892 },
-];
+import { DESTINATIONS, DESTINATIONS_BY_COUNTRY } from "../constants/destinations";
 
 interface Props {
   onClose: () => void;
@@ -47,7 +42,7 @@ export default function CreateTripModal({ onClose, onCreate }: Props) {
     setError(null);
     try {
       await onCreate({
-        title: title.trim() || `${dest.label.split(",")[0]} getaway`,
+        title: title.trim() || `${dest.label} getaway`,
         destination: dest.key,
         destinationLat: dest.lat,
         destinationLng: dest.lng,
@@ -83,10 +78,14 @@ export default function CreateTripModal({ onClose, onCreate }: Props) {
               onChange={(e) => setDestinationKey(e.target.value)}
               className="w-full rounded-lg border border-ink-900/10 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
             >
-              {DESTINATIONS.map((d) => (
-                <option key={d.key} value={d.key}>
-                  {d.label}
-                </option>
+              {Object.entries(DESTINATIONS_BY_COUNTRY).map(([country, dests]) => (
+                <optgroup key={country} label={country}>
+                  {dests.map((d) => (
+                    <option key={d.key} value={d.key}>
+                      {d.label}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>

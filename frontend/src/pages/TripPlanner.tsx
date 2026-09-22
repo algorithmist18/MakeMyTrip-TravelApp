@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import { Hotel, ItineraryItem, Place, Trip, TravelStyle } from "../types";
 import { useTripSocket } from "../hooks/useTripSocket";
 import { TRAVEL_STYLE_MAP } from "../constants/travelStyles";
+import { destinationLabel } from "../constants/destinations";
 import { haversineKm } from "../utils/geo";
 import TravelStyleSelector from "../components/TravelStyleSelector";
 import PlaceCard from "../components/PlaceCard";
@@ -229,7 +230,7 @@ export default function TripPlanner() {
                 {new Date(trip.endDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })} ·{" "}
                 {dayCount} days
               </span>
-              <span className="capitalize">📍 {trip.destination}</span>
+              <span>📍 {destinationLabel(trip.destination)}</span>
             </p>
           </div>
         </div>
@@ -248,7 +249,9 @@ export default function TripPlanner() {
         </div>
 
         <div className="mt-8">
-          <p className="text-xs font-bold uppercase tracking-wide text-brand-600">✨ Explore {trip.destination}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-brand-600">
+            ✨ Explore {destinationLabel(trip.destination)}
+          </p>
           <h2 className="text-lg font-bold text-ink-900">Add places to your trip</h2>
           <p className="mb-3 text-xs text-ink-500">
             Pick up to {styleMeta?.targetPlaces ?? 4} places, then fine-tune your route.

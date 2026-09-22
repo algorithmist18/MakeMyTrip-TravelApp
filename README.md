@@ -62,7 +62,7 @@ Edit `backend/.env` and set `JWT_SECRET` to any long random string.
 
 ```bash
 npm run db:migrate --workspace backend   # creates backend/prisma/dev.db and applies the schema
-npm run seed --workspace backend         # seeds curated places for Bangkok, Goa, and Manali
+npm run seed --workspace backend         # seeds curated places for 7 destinations (see below)
 ```
 
 ### 4. Run the app
@@ -108,14 +108,23 @@ Socket.io events: client emits `join_trip` / `leave_trip` with a trip id; server
 `trip_updated` (full trip payload) to everyone in that trip's room after any mutation, and
 `collaborator_presence` when someone joins.
 
+## Destinations
+
+Seeded destinations, grouped by country in the create-trip picker:
+
+- **Thailand**: Bangkok, Phuket, Chiang Mai, Pattaya, Krabi
+- **India**: Goa, Manali
+
 ## Adding more destinations
 
 Seed data lives in `backend/prisma/seed.ts` (`places` and `hotels` arrays). Add entries with a
-`destination` key (lowercase, matches what `CreateTripModal` sends) plus real lat/lng, and re-run
-`npm run seed --workspace backend`. Also add the destination to
-`frontend/src/components/CreateTripModal.tsx`'s `DESTINATIONS` list so it's selectable when
-creating a trip. A hotel entry needs a `tier` of `"budget"`, `"mid"`, or `"luxury"` — this is what
-the trip planner sorts against each travel style's preferred tier order.
+`destination` key (lowercase, hyphenated for multi-word names — this is what `CreateTripModal`
+sends) plus real lat/lng, and re-run `npm run seed --workspace backend`. Also add the destination
+to `DESTINATIONS` in `frontend/src/constants/destinations.ts` (key, label, country, lat/lng) so
+it's selectable when creating a trip and displays correctly everywhere (trip cards, Wrapped,
+the planner header) — `destinationLabel()`/`destinationFullLabel()` from that file are what those
+screens use instead of the raw key. A hotel entry needs a `tier` of `"budget"`, `"mid"`, or
+`"luxury"` — this is what the trip planner sorts against each travel style's preferred tier order.
 
 ## Adding more travel styles
 
