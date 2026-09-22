@@ -6,8 +6,9 @@ that turns your confirmed trips into a shareable year-in-travel recap.
 ## What's in here
 
 1. **Collaborative itinerary builder** — create a trip, pick a destination, and build a day-by-day
-   itinerary with friends in real time. A live Leaflet map (OpenStreetMap tiles, no API key needed)
-   shows numbered stops and the route between them, mirroring the MakeMyTrip-style planner UI
+   itinerary with friends in real time. A live Leaflet map (CARTO Voyager tiles built on
+   OpenStreetMap data, English labels worldwide, no API key needed) shows numbered stops and the
+   route between them, mirroring the MakeMyTrip-style planner UI
    (travel-style selector, place cards, "hidden gems" section, smart daily spend estimate,
    invite-collaborators card). Every add, remove, and reorder is broadcast over a WebSocket to
    everyone else viewing the trip.
@@ -20,7 +21,7 @@ that turns your confirmed trips into a shareable year-in-travel recap.
 ## Stack
 
 - **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS, React Router, `react-leaflet` +
-  `leaflet` (OpenStreetMap tiles, no API key required), `socket.io-client`.
+  `leaflet` (CARTO Voyager tiles, English labels, no API key required), `socket.io-client`.
 - **Backend**: Node.js + Express + TypeScript, Prisma ORM over SQLite (zero external infra to set
   up), `socket.io` for real-time collaboration, JWT auth (bcrypt password hashing).
 

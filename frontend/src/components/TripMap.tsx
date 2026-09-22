@@ -4,6 +4,7 @@ import type { LatLngTuple } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { ItineraryItem } from "../types";
 import { numberedIcon } from "../utils/mapIcons";
+import { TILE_ATTRIBUTION, TILE_URL } from "../utils/mapTiles";
 import FitMapBounds from "./FitMapBounds";
 
 interface Props {
@@ -27,10 +28,7 @@ export default function TripMap({ centerLat, centerLng, itinerary, activeDay }: 
       scrollWheelZoom
       style={{ height: "100%", width: "100%" }}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} />
       {visible.map((item, idx) => (
         <Marker
           key={item.tripPlaceId}

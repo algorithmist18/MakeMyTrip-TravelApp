@@ -3,6 +3,7 @@ import type { LatLngTuple } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { WrappedCircuitPoint } from "../types";
 import { numberedIcon } from "../utils/mapIcons";
+import { TILE_ATTRIBUTION, TILE_URL } from "../utils/mapTiles";
 import FitMapBounds from "./FitMapBounds";
 
 interface Props {
@@ -23,10 +24,7 @@ export default function WrappedCircuitMap({ circuit }: Props) {
 
   return (
     <MapContainer center={center} zoom={circuit.length > 1 ? 3 : 8} style={{ height: "100%", width: "100%" }}>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} />
       {circuit.map((c, idx) => (
         <Marker key={c.tripId} position={[c.lat, c.lng]} icon={numberedIcon(idx + 1)} />
       ))}
