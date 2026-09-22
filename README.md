@@ -6,12 +6,10 @@ that turns your confirmed trips into a shareable year-in-travel recap.
 ## What's in here
 
 1. **Collaborative itinerary builder** — create a trip, pick a destination, and build a day-by-day
-   itinerary with friends in real time. A live Leaflet map (CARTO Voyager tiles built on
-   OpenStreetMap data, English labels worldwide, no API key needed) shows numbered stops and the
-   route between them, mirroring the MakeMyTrip-style planner UI
-   (travel-style selector, place cards, "hidden gems" section, smart daily spend estimate,
-   invite-collaborators card). Every add, remove, and reorder is broadcast over a WebSocket to
-   everyone else viewing the trip.
+   itinerary with friends in real time. A live Google Map shows numbered stops and the route
+   between them, mirroring the MakeMyTrip-style planner UI (travel-style selector, place cards,
+   "hidden gems" section, smart daily spend estimate, invite-collaborators card). Every add,
+   remove, and reorder is broadcast over a WebSocket to everyone else viewing the trip.
 2. **Post-trip "Did you do it?" + Wrapped** — once a trip's end date passes, the app asks whether
    it actually happened. Confirmed trips roll up into a `/wrapped` page for the year: stat tiles
    (trips completed, cities visited, days traveled, top travel style), a circuit map connecting
@@ -20,8 +18,8 @@ that turns your confirmed trips into a shareable year-in-travel recap.
 
 ## Stack
 
-- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS, React Router, `react-leaflet` +
-  `leaflet` (CARTO Voyager tiles, English labels, no API key required), `socket.io-client`.
+- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS, React Router, `@react-google-maps/api`,
+  `socket.io-client`.
 - **Backend**: Node.js + Express + TypeScript, Prisma ORM over SQLite (zero external infra to set
   up), `socket.io` for real-time collaboration, JWT auth (bcrypt password hashing).
 
@@ -47,8 +45,11 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Edit `backend/.env` and set `JWT_SECRET` to any long random string. The frontend's `.env` needs no
-map API key — maps run on Leaflet + free OpenStreetMap tiles out of the box.
+Edit `frontend/.env` and set `VITE_GOOGLE_MAPS_API_KEY` to a Google Maps JavaScript API key
+(enable the "Maps JavaScript API"). Without a key, the app still runs — the map panel falls back
+to a numbered list of stops instead of the interactive map.
+
+Edit `backend/.env` and set `JWT_SECRET` to any long random string.
 
 ### 3. Set up the database
 
