@@ -67,6 +67,19 @@ model Place {
   tripPlaces    TripPlace[]
 }
 
+model Hotel {
+  id            String @id @default(cuid())
+  destination   String
+  name          String
+  neighborhood  String?
+  rating        Float  @default(4.3)
+  pricePerNight Int
+  tier          String // "budget" | "mid" | "luxury"
+  lat           Float
+  lng           Float
+  imageUrl      String?
+}
+
 model TripPlace {
   id        String   @id @default(cuid())
   tripId    String

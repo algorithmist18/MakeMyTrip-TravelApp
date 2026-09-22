@@ -1,23 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
-import { ItineraryItem, Place, Trip, TravelStyle } from "../types";
+import { Hotel, ItineraryItem, Place, Trip, TravelStyle } from "../types";
 import { useTripSocket } from "../hooks/useTripSocket";
+import { TRAVEL_STYLE_MAP } from "../constants/travelStyles";
+import { haversineKm } from "../utils/geo";
 import TravelStyleSelector from "../components/TravelStyleSelector";
 import PlaceCard from "../components/PlaceCard";
+import HotelCard from "../components/HotelCard";
 import ItineraryList from "../components/ItineraryList";
 import TripMap from "../components/TripMap";
 import SmartSpendCard from "../components/SmartSpendCard";
 import InviteCollaboratorsCard from "../components/InviteCollaboratorsCard";
 import TripCompletionPrompt from "../components/TripCompletionPrompt";
 
-const MAX_PLACES = 4;
-
 export default function TripPlanner() {
   const { tripId } = useParams<{ tripId: string }>();
   const navigate = useNavigate();
   const [trip, setTrip] = useState<Trip | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [activeDay, setActiveDay] = useState<number | "all">("all");
@@ -34,9 +36,13 @@ export default function TripPlanner() {
         const res = await api.get(`/trips/${tripId}`);
         if (cancelled) return;
         setTrip(res.data.trip);
-        const placesRes = await api.get(`/places`, { params: { destination: res.data.trip.destination } });
+        const [placesRes, hotelsRes] = await Promise.all([
+          api.get(`/places`, { params: { destination: res.data.trip.destination } }),
+          api.get(`/hotels`, { params: { destination: res.data.trip.destination } }),
+        ]);
         if (cancelled) return;
         setPlaces(placesRes.data.places);
+        setHotels(hotelsRes.data.hotels);
       } catch {
         setNotFound(true);
       } finally {
@@ -58,6 +64,27 @@ export default function TripPlanner() {
   const addedPlaceIds = useMemo(() => new Set(trip?.itinerary.map((i) => i.place.id) ?? []), [trip]);
   const regularPlaces = places.filter((p) => !p.isHiddenGem);
   const gemPlaces = places.filter((p) => p.isHiddenGem);
+  const styleMeta = trip ? TRAVEL_STYLE_MAP[trip.travelStyle] : undefined;
+
+  const sortedHotels = useMemo(() => {
+    if (!trip || hotels.length === 0) return [];
+    const center =
+      trip.destinationLat != null && trip.destinationLng != null
+        ? { lat: trip.destinationLat, lng: trip.destinationLng }
+        : null;
+    const tierOrder = styleMeta?.hotelTierOrder ?? ["mid", "budget", "luxury"];
+    return [...hotels]
+      .map((hotel) => ({
+        hotel,
+        distanceKm: center ? haversineKm(center, hotel) : null,
+        tierRank: tierOrder.indexOf(hotel.tier),
+      }))
+      .sort((a, b) => {
+        if (a.tierRank !== b.tierRank) return a.tierRank - b.tierRank;
+        return (a.distanceKm ?? 0) - (b.distanceKm ?? 0);
+      })
+      .slice(0, 6);
+  }, [hotels, trip, styleMeta]);
 
   async function refresh() {
     const res = await api.get(`/trips/${tripId}`);
@@ -223,7 +250,9 @@ export default function TripPlanner() {
         <div className="mt-8">
           <p className="text-xs font-bold uppercase tracking-wide text-brand-600">✨ Explore {trip.destination}</p>
           <h2 className="text-lg font-bold text-ink-900">Add places to your trip</h2>
-          <p className="mb-3 text-xs text-ink-500">Pick up to {MAX_PLACES} places, then fine-tune your route.</p>
+          <p className="mb-3 text-xs text-ink-500">
+            Pick up to {styleMeta?.targetPlaces ?? 4} places, then fine-tune your route.
+          </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {regularPlaces.map((place) => (
               <PlaceCard
@@ -266,10 +295,26 @@ export default function TripPlanner() {
           </div>
         )}
 
+        {sortedHotels.length > 0 && (
+          <div className="mt-8">
+            <p className="text-xs font-bold uppercase tracking-wide text-brand-600">🏨 Stay nearby</p>
+            <h2 className="text-lg font-bold text-ink-900">Suggested hotels</h2>
+            <p className="mb-3 text-xs text-ink-500">
+              Matched to your {styleMeta?.title.toLowerCase() ?? ""} style, closest first.
+            </p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {sortedHotels.map(({ hotel, distanceKm, tierRank }) => (
+                <HotelCard key={hotel.id} hotel={hotel} distanceKm={distanceKm} matchesStyle={tierRank === 0} />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-8">
           <ItineraryList
             itinerary={trip.itinerary}
-            totalPlacesTarget={MAX_PLACES}
+            totalPlacesTarget={styleMeta?.targetPlaces ?? 4}
+            paceHint={styleMeta?.paceHint ?? ""}
             onRemove={handleRemoveByTripPlaceId}
             onMove={handleMove}
             onOptimize={handleOptimize}

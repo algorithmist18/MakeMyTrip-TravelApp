@@ -3,13 +3,22 @@ import { ItineraryItem } from "../types";
 interface Props {
   itinerary: ItineraryItem[];
   totalPlacesTarget: number;
+  paceHint: string;
   onRemove: (tripPlaceId: string) => void;
   onMove: (item: ItineraryItem, direction: "up" | "down") => void;
   onOptimize: () => void;
   busy?: boolean;
 }
 
-export default function ItineraryList({ itinerary, totalPlacesTarget, onRemove, onMove, onOptimize, busy }: Props) {
+export default function ItineraryList({
+  itinerary,
+  totalPlacesTarget,
+  paceHint,
+  onRemove,
+  onMove,
+  onOptimize,
+  busy,
+}: Props) {
   const byDay = new Map<number, ItineraryItem[]>();
   for (const item of itinerary) {
     const list = byDay.get(item.day) ?? [];
@@ -24,7 +33,7 @@ export default function ItineraryList({ itinerary, totalPlacesTarget, onRemove, 
         <div>
           <h2 className="text-lg font-bold text-ink-900">Your itinerary</h2>
           <p className="text-xs text-ink-500">
-            {itinerary.length}/{totalPlacesTarget} saved
+            {itinerary.length}/{totalPlacesTarget} saved · {paceHint}
           </p>
         </div>
         <button

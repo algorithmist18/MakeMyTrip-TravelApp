@@ -5,12 +5,7 @@ import { Trip } from "../types";
 import CreateTripModal from "../components/CreateTripModal";
 import TripCompletionPrompt from "../components/TripCompletionPrompt";
 import { useAuth } from "../context/AuthContext";
-
-const STYLE_LABEL: Record<string, string> = {
-  chill: "Chill",
-  "cost-saving": "Cost-saving",
-  backpacking: "Backpacking",
-};
+import { travelStyleLabel } from "../constants/travelStyles";
 
 function TripCard({ trip }: { trip: Trip }) {
   const nights = Math.max(
@@ -46,7 +41,7 @@ function TripCard({ trip }: { trip: Trip }) {
               : "bg-brand-100 text-brand-700"
           }`}
         >
-          {trip.status === "completed" ? "Completed" : trip.status === "not-completed" ? "Skipped" : STYLE_LABEL[trip.travelStyle]}
+          {trip.status === "completed" ? "Completed" : trip.status === "not-completed" ? "Skipped" : travelStyleLabel(trip.travelStyle)}
         </span>
       </div>
     </Link>

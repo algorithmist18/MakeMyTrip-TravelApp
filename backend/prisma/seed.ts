@@ -26,6 +26,32 @@ const places = [
   { destination: "manali", name: "Jana Waterfall", neighborhood: "Jana", category: "Nature", rating: 4.5, durationLabel: "2-3 hrs", lat: 32.0333, lng: 77.1167, imageUrl: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800", isHiddenGem: true },
 ];
 
+const hotels = [
+  // Bangkok
+  { destination: "bangkok", name: "Riverside Backpackers Hostel", neighborhood: "Chinatown", rating: 4.1, pricePerNight: 900, tier: "budget", lat: 13.7395, lng: 100.5090, imageUrl: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800" },
+  { destination: "bangkok", name: "Silom Capsule Inn", neighborhood: "Silom", rating: 4.0, pricePerNight: 1100, tier: "budget", lat: 13.7248, lng: 100.5340, imageUrl: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800" },
+  { destination: "bangkok", name: "Sukhumvit Garden Hotel", neighborhood: "Sukhumvit", rating: 4.4, pricePerNight: 3200, tier: "mid", lat: 13.7380, lng: 100.5610, imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800" },
+  { destination: "bangkok", name: "Siam Central Hotel", neighborhood: "Siam", rating: 4.5, pricePerNight: 3600, tier: "mid", lat: 13.7460, lng: 100.5340, imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800" },
+  { destination: "bangkok", name: "Chao Phraya Riverside Grand", neighborhood: "Phra Nakhon", rating: 4.8, pricePerNight: 9500, tier: "luxury", lat: 13.7440, lng: 100.4950, imageUrl: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800" },
+  { destination: "bangkok", name: "The Platinum Sky Resort", neighborhood: "Sukhumvit", rating: 4.7, pricePerNight: 12000, tier: "luxury", lat: 13.7500, lng: 100.5470, imageUrl: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800" },
+
+  // Goa
+  { destination: "goa", name: "Baga Beach Hostel", neighborhood: "Baga", rating: 4.0, pricePerNight: 800, tier: "budget", lat: 15.5560, lng: 73.7520, imageUrl: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800" },
+  { destination: "goa", name: "Anjuna Backpackers Camp", neighborhood: "Anjuna", rating: 4.1, pricePerNight: 950, tier: "budget", lat: 15.5780, lng: 73.7400, imageUrl: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800" },
+  { destination: "goa", name: "Candolim Garden Resort", neighborhood: "Candolim", rating: 4.4, pricePerNight: 3400, tier: "mid", lat: 15.5170, lng: 73.7630, imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800" },
+  { destination: "goa", name: "Panjim Riverside Inn", neighborhood: "Panjim", rating: 4.3, pricePerNight: 3100, tier: "mid", lat: 15.4989, lng: 73.8278, imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800" },
+  { destination: "goa", name: "Aguada Bay Luxury Resort", neighborhood: "Candolim", rating: 4.8, pricePerNight: 11000, tier: "luxury", lat: 15.4930, lng: 73.7750, imageUrl: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800" },
+  { destination: "goa", name: "Divar Island Heritage Villa", neighborhood: "Divar", rating: 4.7, pricePerNight: 9800, tier: "luxury", lat: 15.5200, lng: 73.9110, imageUrl: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800" },
+
+  // Manali
+  { destination: "manali", name: "Old Manali Traveler's Hostel", neighborhood: "Old Manali", rating: 4.2, pricePerNight: 700, tier: "budget", lat: 32.2540, lng: 77.1660, imageUrl: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800" },
+  { destination: "manali", name: "Solang Valley Camp Stay", neighborhood: "Solang", rating: 4.1, pricePerNight: 900, tier: "budget", lat: 32.3180, lng: 77.1550, imageUrl: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800" },
+  { destination: "manali", name: "Mall Road Boutique Hotel", neighborhood: "Mall Road", rating: 4.5, pricePerNight: 3000, tier: "mid", lat: 32.2430, lng: 77.1890, imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800" },
+  { destination: "manali", name: "Hadimba Pine Resort", neighborhood: "Old Manali", rating: 4.4, pricePerNight: 3300, tier: "mid", lat: 32.2450, lng: 77.1700, imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800" },
+  { destination: "manali", name: "Beas River Luxury Resort", neighborhood: "Manali", rating: 4.7, pricePerNight: 8500, tier: "luxury", lat: 32.2390, lng: 77.1900, imageUrl: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800" },
+  { destination: "manali", name: "Snow Peak Grand Retreat", neighborhood: "Solang", rating: 4.8, pricePerNight: 9800, tier: "luxury", lat: 32.3210, lng: 77.1560, imageUrl: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800" },
+];
+
 async function main() {
   for (const place of places) {
     const existing = await prisma.place.findFirst({ where: { destination: place.destination, name: place.name } });
@@ -34,6 +60,14 @@ async function main() {
     }
   }
   console.log(`Seeded ${places.length} places.`);
+
+  for (const hotel of hotels) {
+    const existing = await prisma.hotel.findFirst({ where: { destination: hotel.destination, name: hotel.name } });
+    if (!existing) {
+      await prisma.hotel.create({ data: hotel });
+    }
+  }
+  console.log(`Seeded ${hotels.length} hotels.`);
 }
 
 main()

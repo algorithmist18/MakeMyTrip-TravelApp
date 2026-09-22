@@ -5,10 +5,9 @@ import { useAuth } from "../context/AuthContext";
 import StatTile from "../components/StatTile";
 import WrappedCircuitMap from "../components/WrappedCircuitMap";
 import WrappedShareCard from "../components/WrappedShareCard";
+import { travelStyleLabel } from "../constants/travelStyles";
 
-const STYLE_LABEL: Record<string, string> = {
-  chill: "Chill traveler",
-  "cost-saving": "Cost-saving traveler",
+const TRAVELER_LABEL: Record<string, string> = {
   backpacking: "Backpacker",
 };
 
@@ -79,7 +78,12 @@ export default function Wrapped() {
             <StatTile
               icon="🏅"
               label="Top style"
-              value={data.stats.topTravelStyle ? STYLE_LABEL[data.stats.topTravelStyle] : "—"}
+              value={
+                data.stats.topTravelStyle
+                  ? TRAVELER_LABEL[data.stats.topTravelStyle] ??
+                    `${travelStyleLabel(data.stats.topTravelStyle)} traveler`
+                  : "—"
+              }
             />
           </div>
 

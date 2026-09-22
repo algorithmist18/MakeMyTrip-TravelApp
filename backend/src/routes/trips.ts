@@ -14,6 +14,9 @@ import { emitToTrip } from "../sockets/bus";
 
 const router = Router();
 
+const TRAVEL_STYLES = ["luxury", "chill", "romantic", "family", "cost-saving", "backpacking"] as const;
+const travelStyleSchema = z.enum(TRAVEL_STYLES);
+
 function serializeTrip(trip: NonNullable<Awaited<ReturnType<typeof getFullTrip>>>) {
   return {
     id: trip.id,
@@ -68,7 +71,7 @@ const createTripSchema = z.object({
   destinationLng: z.number().optional(),
   startDate: z.string(),
   endDate: z.string(),
-  travelStyle: z.enum(["chill", "cost-saving", "backpacking"]).default("cost-saving"),
+  travelStyle: travelStyleSchema.default("cost-saving"),
   travelerCount: z.number().int().min(1).max(30).default(1),
 });
 
@@ -103,7 +106,7 @@ router.get("/:id", requireAuth, async (req: AuthedRequest, res) => {
 
 const updateTripSchema = z.object({
   title: z.string().min(1).max(120).optional(),
-  travelStyle: z.enum(["chill", "cost-saving", "backpacking"]).optional(),
+  travelStyle: travelStyleSchema.optional(),
   travelerCount: z.number().int().min(1).max(30).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),

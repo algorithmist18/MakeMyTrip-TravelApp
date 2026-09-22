@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { TravelStyle } from "../types";
+import { TRAVEL_STYLES } from "../constants/travelStyles";
 
 export const DESTINATIONS = [
   { key: "bangkok", label: "Bangkok, Thailand", lat: 13.7563, lng: 100.5018 },
@@ -119,9 +120,11 @@ export default function CreateTripModal({ onClose, onCreate }: Props) {
                 onChange={(e) => setTravelStyle(e.target.value as TravelStyle)}
                 className="w-full rounded-lg border border-ink-900/10 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
               >
-                <option value="chill">Chill</option>
-                <option value="cost-saving">Cost-saving</option>
-                <option value="backpacking">Backpacking</option>
+                {TRAVEL_STYLES.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.title}
+                  </option>
+                ))}
               </select>
             </div>
             <div>

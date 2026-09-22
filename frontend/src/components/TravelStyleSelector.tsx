@@ -1,10 +1,5 @@
 import { TravelStyle } from "../types";
-
-const OPTIONS: { key: TravelStyle; icon: string; title: string; subtitle: string }[] = [
-  { key: "chill", icon: "🧘", title: "Chill", subtitle: "More time, fewer stops" },
-  { key: "cost-saving", icon: "🚈", title: "Cost-saving", subtitle: "Smart transit, local eats" },
-  { key: "backpacking", icon: "🗺️", title: "Backpacking", subtitle: "Maximum adventure" },
-];
+import { TRAVEL_STYLES } from "../constants/travelStyles";
 
 interface Props {
   value: TravelStyle;
@@ -14,8 +9,8 @@ interface Props {
 
 export default function TravelStyleSelector({ value, onChange, disabled }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      {OPTIONS.map((opt) => {
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {TRAVEL_STYLES.map((opt) => {
         const active = value === opt.key;
         return (
           <button

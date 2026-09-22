@@ -64,12 +64,16 @@ export async function reorderTripPlaces(tripId: string, items: ReorderItem[]) {
   return getFullTrip(tripId);
 }
 
+const PER_PERSON_DAILY_SPEND: Record<string, number> = {
+  luxury: 7500,
+  chill: 3200,
+  romantic: 4200,
+  family: 2600,
+  "cost-saving": 1900,
+  backpacking: 1100,
+};
+
 export function estimateDailySpend(travelStyle: string, travelerCount: number): number {
-  const perPersonBase: Record<string, number> = {
-    chill: 3200,
-    "cost-saving": 1900,
-    backpacking: 1100,
-  };
-  const base = perPersonBase[travelStyle] ?? 1900;
+  const base = PER_PERSON_DAILY_SPEND[travelStyle] ?? 1900;
   return base * Math.max(travelerCount, 1);
 }

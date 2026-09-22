@@ -5,7 +5,8 @@ export interface User {
   avatarColor: string;
 }
 
-export type TravelStyle = "chill" | "cost-saving" | "backpacking";
+export type TravelStyle = "luxury" | "chill" | "romantic" | "family" | "cost-saving" | "backpacking";
+export type HotelTier = "budget" | "mid" | "luxury";
 export type TripStatus = "planning" | "completed" | "not-completed";
 
 export interface Place {
@@ -20,6 +21,19 @@ export interface Place {
   lng: number;
   imageUrl: string | null;
   isHiddenGem: boolean;
+}
+
+export interface Hotel {
+  id: string;
+  destination: string;
+  name: string;
+  neighborhood: string | null;
+  rating: number;
+  pricePerNight: number;
+  tier: HotelTier;
+  lat: number;
+  lng: number;
+  imageUrl: string | null;
 }
 
 export interface ItineraryItem {
