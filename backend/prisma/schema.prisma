@@ -36,6 +36,7 @@ model Trip {
   creator         User               @relation("TripCreator", fields: [creatorId], references: [id])
   collaborators   TripCollaborator[]
   places          TripPlace[]
+  extraActivities ExtraActivity[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 }
@@ -88,9 +89,18 @@ model TripPlace {
   place     Place    @relation(fields: [placeId], references: [id])
   day       Int      @default(1)
   order     Int      @default(0)
+  visited   Boolean  @default(true)
   addedById String?
   addedBy   User?    @relation(fields: [addedById], references: [id])
   createdAt DateTime @default(now())
 
   @@unique([tripId, placeId])
+}
+
+model ExtraActivity {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  title     String
+  createdAt DateTime @default(now())
 }

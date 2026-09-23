@@ -13,7 +13,8 @@ import ItineraryList from "../components/ItineraryList";
 import TripMap from "../components/TripMap";
 import SmartSpendCard from "../components/SmartSpendCard";
 import InviteCollaboratorsCard from "../components/InviteCollaboratorsCard";
-import TripCompletionPrompt from "../components/TripCompletionPrompt";
+import TripCompletionPrompt, { CompletionPayload } from "../components/TripCompletionPrompt";
+import TripCircuitCard from "../components/TripCircuitCard";
 
 export default function TripPlanner() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -25,6 +26,8 @@ export default function TripPlanner() {
   const [busy, setBusy] = useState(false);
   const [activeDay, setActiveDay] = useState<number | "all">("all");
   const [notFound, setNotFound] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [showCircuit, setShowCircuit] = useState(false);
 
   const applyTrip = useCallback((next: Trip) => setTrip(next), []);
   useTripSocket(tripId, applyTrip);
@@ -193,11 +196,23 @@ export default function TripPlanner() {
     }
   }
 
-  async function handleCompletionAnswer(_tripId: string, didYouDoIt: boolean) {
-    if (!trip) return;
-    await api.post(`/trips/${trip.id}/complete`, { didYouDoIt });
-    await refresh();
+  async function handleCompletionSubmit(payload: CompletionPayload): Promise<Trip> {
+    if (!trip) throw new Error("No trip loaded");
+    const res = await api.post(`/trips/${trip.id}/complete`, payload);
+    setTrip(res.data.trip);
+    return res.data.trip;
   }
+
+  const needsCompletion = !!(
+    trip &&
+    trip.status === "planning" &&
+    !trip.askedCompletion &&
+    new Date(trip.endDate) < new Date()
+  );
+
+  useEffect(() => {
+    if (needsCompletion) setShowCompletion(true);
+  }, [needsCompletion]);
 
   if (notFound) {
     return (
@@ -213,9 +228,6 @@ export default function TripPlanner() {
   if (loading || !trip) {
     return <div className="flex h-[60vh] items-center justify-center text-ink-500">Loading trip…</div>;
   }
-
-  const needsCompletion =
-    trip.status === "planning" && !trip.askedCompletion && new Date(trip.endDate) < new Date();
 
   return (
     <div className="flex flex-col lg:h-[calc(100vh-57px)] lg:flex-row">
@@ -234,6 +246,22 @@ export default function TripPlanner() {
             </p>
           </div>
         </div>
+
+        {trip.status === "completed" && (
+          <div className="mt-4 flex items-center justify-between rounded-xl bg-green-50 px-4 py-3">
+            <p className="text-sm font-semibold text-green-700">
+              ✅ Trip completed — {trip.itinerary.filter((i) => i.visited).length} stop
+              {trip.itinerary.filter((i) => i.visited).length === 1 ? "" : "s"},{" "}
+              {trip.extraActivities.length} extra {trip.extraActivities.length === 1 ? "memory" : "memories"}
+            </p>
+            <button
+              onClick={() => setShowCircuit(true)}
+              className="rounded-full bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800"
+            >
+              View & share circuit
+            </button>
+          </div>
+        )}
 
         <div className="mt-6">
           <div className="mb-2 flex items-center justify-between">
@@ -365,8 +393,26 @@ export default function TripPlanner() {
         />
       </div>
 
-      {needsCompletion && (
-        <TripCompletionPrompt trip={trip} onAnswer={handleCompletionAnswer} busy={busy} />
+      {showCompletion && (
+        <TripCompletionPrompt
+          trip={trip}
+          onSubmit={handleCompletionSubmit}
+          onClose={() => setShowCompletion(false)}
+        />
+      )}
+
+      {showCircuit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 px-4">
+          <div className="w-full max-w-sm">
+            <TripCircuitCard trip={trip} />
+            <button
+              onClick={() => setShowCircuit(false)}
+              className="mt-3 w-full rounded-lg border border-white/40 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

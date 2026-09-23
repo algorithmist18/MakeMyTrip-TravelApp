@@ -17,11 +17,16 @@ that turns your confirmed trips into a shareable year-in-travel recap.
 3. **Nearby hotel suggestions** — each trip's planner shows hotels for that destination, sorted by
    how well their price tier (budget/mid/luxury) matches the selected travel style, then by
    distance from the trip's destination center; the best-tier matches are flagged "Best match".
-4. **Post-trip "Did you do it?" + Wrapped** — once a trip's end date passes, the app asks whether
-   it actually happened. Confirmed trips roll up into a `/wrapped` page for the year: stat tiles
-   (trips completed, cities visited, days traveled, top travel style), a circuit map connecting
-   your destinations in chronological order, and a downloadable shareable recap card (PNG),
-   Strava "Year in Sport"-style.
+4. **Post-trip check-in + shareable circuit** — once a trip's end date passes, the app asks: did
+   you go? If yes, it shows a checklist of everything that was planned (uncheck what you skipped)
+   plus a free-text "anything else you did?" box for unplanned stops. That builds a per-trip
+   Strava-style "circuit" card — a route line connecting your actual visited places, numbered in
+   order, with your extra memories listed — downloadable as a PNG to share anywhere. It's
+   reachable again anytime afterward from a "View & share circuit" button on a completed trip.
+5. **Wrapped** — confirmed trips roll up into a `/wrapped` page for the year: stat tiles (trips
+   completed, cities visited, days traveled, top travel style), a circuit map connecting your
+   destinations in chronological order, and a downloadable shareable recap card (PNG), Strava
+   "Year in Sport"-style.
 
 ## Stack
 
@@ -78,13 +83,21 @@ To try real-time collaboration, sign up a second account in another browser/prof
 email as a collaborator from the trip planner's "Bring your people" card, and open the same trip
 in both windows — added/removed/reordered places sync live.
 
-## How the "Wrapped" flow works
+## How the completion + circuit flow works
 
 - A trip stays `planning` until its `endDate` passes.
 - Once passed, the next time the trip owner or a collaborator loads the dashboard or the trip
   itself, a "Did you go on this trip?" prompt appears.
-- Answering **Yes** marks the trip `completed` with a `completedAt` timestamp; **No** marks it
-  `not-completed`. Either way it won't be asked again.
+- **No** marks the trip `not-completed` immediately; it won't be asked again.
+- **Yes** moves to a checklist of the planned itinerary (each place defaults to checked/visited,
+  toggle off anything skipped) plus a field to add unplanned activities. Submitting marks the trip
+  `completed`, sets each `TripPlace.visited` flag accordingly, and creates an `ExtraActivity` row
+  per typed-in extra — then immediately shows the resulting circuit card.
+- The circuit card (`TripCircuitCard`) draws a route line connecting the visited places' real
+  lat/lng (normalized to fit the card, via `utils/circuit.ts`), numbered in visit order, with
+  stats and a list of stops/extras. "Download to share" renders the same thing at high resolution
+  on a `<canvas>` and saves it as a PNG — no backend hosting needed, just an image you can post
+  anywhere. A completed trip's planner page keeps a "View & share circuit" button to reopen it.
 - `/wrapped` aggregates all of a user's `completed` trips for a chosen year: trip/city/day counts,
   most-used travel style, a chronological circuit (polyline across destinations on the map), and a
   one-click PNG export people can post elsewhere.
@@ -99,7 +112,7 @@ All routes are under `/api` and (except `/auth/signup` and `/auth/login`) requir
 - `POST /trips/:id/collaborators` — invite an existing user by email
 - `POST /trips/:id/places`, `DELETE /trips/:id/places/:tripPlaceId`,
   `PATCH /trips/:id/places/reorder`
-- `POST /trips/:id/complete` — `{ didYouDoIt: boolean }`
+- `POST /trips/:id/complete` — `{ didYouDoIt: boolean, visitedTripPlaceIds?: string[], extraActivities?: string[] }`
 - `GET /places?destination=bangkok` — curated place catalog per destination
 - `GET /hotels?destination=bangkok` — curated hotel catalog (budget/mid/luxury) per destination
 - `GET /wrapped` — years that have confirmed trips; `GET /wrapped/:year` — full recap for a year

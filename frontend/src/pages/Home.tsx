@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { Trip } from "../types";
 import CreateTripModal from "../components/CreateTripModal";
-import TripCompletionPrompt from "../components/TripCompletionPrompt";
+import TripCompletionPrompt, { CompletionPayload } from "../components/TripCompletionPrompt";
 import { useAuth } from "../context/AuthContext";
 import { travelStyleLabel } from "../constants/travelStyles";
 import { destinationLabel } from "../constants/destinations";
@@ -55,7 +55,7 @@ export default function Home() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [answering, setAnswering] = useState(false);
+  const [completingTripId, setCompletingTripId] = useState<string | null>(null);
 
   async function loadTrips() {
     const res = await api.get("/trips");
@@ -75,6 +75,12 @@ export default function Home() {
     [trips]
   );
 
+  useEffect(() => {
+    if (!completingTripId && pendingCompletion) setCompletingTripId(pendingCompletion.id);
+  }, [pendingCompletion, completingTripId]);
+
+  const completingTrip = trips.find((t) => t.id === completingTripId) ?? null;
+
   const upcoming = trips.filter((t) => t.status === "planning");
   const past = trips.filter((t) => t.status !== "planning");
 
@@ -84,14 +90,10 @@ export default function Home() {
     navigate(`/trips/${res.data.trip.id}`);
   }
 
-  async function handleCompletionAnswer(tripId: string, didYouDoIt: boolean) {
-    setAnswering(true);
-    try {
-      await api.post(`/trips/${tripId}/complete`, { didYouDoIt });
-      await loadTrips();
-    } finally {
-      setAnswering(false);
-    }
+  async function handleCompletionSubmit(payload: CompletionPayload): Promise<Trip> {
+    const res = await api.post(`/trips/${completingTripId}/complete`, payload);
+    await loadTrips();
+    return res.data.trip;
   }
 
   return (
@@ -148,8 +150,12 @@ export default function Home() {
       )}
 
       {showCreate && <CreateTripModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />}
-      {pendingCompletion && (
-        <TripCompletionPrompt trip={pendingCompletion} onAnswer={handleCompletionAnswer} busy={answering} />
+      {completingTrip && (
+        <TripCompletionPrompt
+          trip={completingTrip}
+          onSubmit={handleCompletionSubmit}
+          onClose={() => setCompletingTripId(null)}
+        />
       )}
     </div>
   );

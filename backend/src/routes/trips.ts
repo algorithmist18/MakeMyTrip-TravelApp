@@ -4,6 +4,7 @@ import { prisma } from "../db";
 import { requireAuth, AuthedRequest } from "../middleware/auth";
 import {
   addPlaceToTrip,
+  completeTrip,
   estimateDailySpend,
   getFullTrip,
   isTripMember,
@@ -38,8 +39,14 @@ function serializeTrip(trip: NonNullable<Awaited<ReturnType<typeof getFullTrip>>
       tripPlaceId: tp.id,
       day: tp.day,
       order: tp.order,
+      visited: tp.visited,
       addedBy: tp.addedBy,
       place: tp.place,
+    })),
+    extraActivities: trip.extraActivities.map((a) => ({
+      id: a.id,
+      title: a.title,
+      createdAt: a.createdAt,
     })),
   };
 }
@@ -59,6 +66,7 @@ router.get("/", requireAuth, async (req: AuthedRequest, res) => {
       creator: { select: { id: true, name: true, email: true, avatarColor: true } },
       collaborators: { include: { user: { select: { id: true, name: true, email: true, avatarColor: true } } } },
       places: { include: { place: true, addedBy: { select: { id: true, name: true, avatarColor: true } } } },
+      extraActivities: { orderBy: { createdAt: "asc" } },
     },
   });
   res.json({ trips: trips.map((t) => serializeTrip(t)) });
@@ -208,21 +216,24 @@ router.patch("/:id/places/reorder", requireAuth, async (req: AuthedRequest, res)
   res.json({ trip: serialized });
 });
 
+const completeSchema = z.object({
+  didYouDoIt: z.boolean(),
+  visitedTripPlaceIds: z.array(z.string()).optional(),
+  extraActivities: z.array(z.string().min(1).max(80)).max(20).optional(),
+});
+
 router.post("/:id/complete", requireAuth, async (req: AuthedRequest, res) => {
   const member = await isTripMember(req.params.id, req.userId!);
   if (!member) return res.status(404).json({ error: "Trip not found" });
 
-  const didYouDoIt = Boolean(req.body?.didYouDoIt);
-  await prisma.trip.update({
-    where: { id: req.params.id },
-    data: {
-      askedCompletion: true,
-      status: didYouDoIt ? "completed" : "not-completed",
-      completedAt: didYouDoIt ? new Date() : null,
-    },
-  });
-  const full = await getFullTrip(req.params.id);
-  const serialized = serializeTrip(full!);
+  const parsed = completeSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
+  }
+
+  const full = await completeTrip(req.params.id, parsed.data);
+  if (!full) return res.status(404).json({ error: "Trip not found" });
+  const serialized = serializeTrip(full);
   emitToTrip(req.params.id, "trip_updated", serialized);
   res.json({ trip: serialized });
 });

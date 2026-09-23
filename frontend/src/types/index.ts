@@ -40,8 +40,15 @@ export interface ItineraryItem {
   tripPlaceId: string;
   day: number;
   order: number;
+  visited: boolean;
   addedBy: { id: string; name: string; avatarColor: string } | null;
   place: Place;
+}
+
+export interface ExtraActivity {
+  id: string;
+  title: string;
+  createdAt: string;
 }
 
 export interface Trip {
@@ -61,6 +68,7 @@ export interface Trip {
   collaborators: User[];
   dailySpendEstimate: number;
   itinerary: ItineraryItem[];
+  extraActivities: ExtraActivity[];
 }
 
 export interface WrappedCircuitPoint {

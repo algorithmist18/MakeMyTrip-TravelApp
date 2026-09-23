@@ -25,8 +25,44 @@ export async function getFullTrip(tripId: string) {
           addedBy: { select: { id: true, name: true, avatarColor: true } },
         },
       },
+      extraActivities: { orderBy: { createdAt: "asc" } },
     },
   });
+}
+
+export interface CompleteTripInput {
+  didYouDoIt: boolean;
+  visitedTripPlaceIds?: string[];
+  extraActivities?: string[];
+}
+
+export async function completeTrip(tripId: string, input: CompleteTripInput) {
+  if (!input.didYouDoIt) {
+    await prisma.trip.update({
+      where: { id: tripId },
+      data: { askedCompletion: true, status: "not-completed", completedAt: null },
+    });
+    return getFullTrip(tripId);
+  }
+
+  const trip = await prisma.trip.findUnique({ where: { id: tripId }, include: { places: true } });
+  if (!trip) return null;
+
+  const visitedSet = new Set(input.visitedTripPlaceIds ?? []);
+  const extraTitles = (input.extraActivities ?? []).map((t) => t.trim()).filter(Boolean).slice(0, 20);
+
+  await prisma.$transaction([
+    ...trip.places.map((tp) =>
+      prisma.tripPlace.update({ where: { id: tp.id }, data: { visited: visitedSet.has(tp.id) } })
+    ),
+    prisma.trip.update({
+      where: { id: tripId },
+      data: { askedCompletion: true, status: "completed", completedAt: new Date() },
+    }),
+    ...extraTitles.map((title) => prisma.extraActivity.create({ data: { tripId, title } })),
+  ]);
+
+  return getFullTrip(tripId);
 }
 
 export async function addPlaceToTrip(tripId: string, placeId: string, userId: string, day = 1) {
