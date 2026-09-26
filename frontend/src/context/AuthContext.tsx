@@ -4,11 +4,8 @@ import { User } from "../types";
 
 interface AuthContextValue {
   user: User | null;
-  token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  newIdentity: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -18,66 +15,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const raw = localStorage.getItem("tt_user");
     return raw ? (JSON.parse(raw) as User) : null;
   });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("tt_token"));
   const [loading, setLoading] = useState(true);
+
+  const persistSession = useCallback((token: string, nextUser: User) => {
+    localStorage.setItem("tt_token", token);
+    localStorage.setItem("tt_user", JSON.stringify(nextUser));
+    setUser(nextUser);
+  }, []);
+
+  const createGuest = useCallback(async () => {
+    const res = await api.post("/auth/guest");
+    persistSession(res.data.token, res.data.user);
+  }, [persistSession]);
 
   useEffect(() => {
     async function bootstrap() {
-      if (!token) {
-        setLoading(false);
-        return;
+      const token = localStorage.getItem("tt_token");
+      if (token) {
+        try {
+          const res = await api.get<User>("/auth/me");
+          setUser(res.data);
+          localStorage.setItem("tt_user", JSON.stringify(res.data));
+          setLoading(false);
+          return;
+        } catch {
+          localStorage.removeItem("tt_token");
+          localStorage.removeItem("tt_user");
+        }
       }
-      try {
-        const res = await api.get<User>("/auth/me");
-        setUser(res.data);
-        localStorage.setItem("tt_user", JSON.stringify(res.data));
-      } catch {
-        setUser(null);
-        setToken(null);
-        localStorage.removeItem("tt_token");
-        localStorage.removeItem("tt_user");
-      } finally {
-        setLoading(false);
-      }
+      // No account, no form: everyone gets a real (auto-created) identity so
+      // trips, collaborators and sockets work exactly as if they'd signed up.
+      await createGuest();
+      setLoading(false);
     }
     bootstrap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const persistSession = useCallback((nextToken: string, nextUser: User) => {
-    localStorage.setItem("tt_token", nextToken);
-    localStorage.setItem("tt_user", JSON.stringify(nextUser));
-    setToken(nextToken);
-    setUser(nextUser);
-  }, []);
-
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const res = await api.post("/auth/login", { email, password });
-      persistSession(res.data.token, res.data.user);
-    },
-    [persistSession]
-  );
-
-  const signup = useCallback(
-    async (name: string, email: string, password: string) => {
-      const res = await api.post("/auth/signup", { name, email, password });
-      persistSession(res.data.token, res.data.user);
-    },
-    [persistSession]
-  );
-
-  const logout = useCallback(() => {
+  const newIdentity = useCallback(async () => {
     localStorage.removeItem("tt_token");
     localStorage.removeItem("tt_user");
-    setToken(null);
     setUser(null);
-  }, []);
+    await createGuest();
+  }, [createGuest]);
 
-  const value = useMemo(
-    () => ({ user, token, loading, login, signup, logout }),
-    [user, token, loading, login, signup, logout]
-  );
+  const value = useMemo(() => ({ user, loading, newIdentity }), [user, loading, newIdentity]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

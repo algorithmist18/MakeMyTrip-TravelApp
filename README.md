@@ -95,11 +95,17 @@ npm run dev
 ```
 
 This runs the backend on `http://localhost:4000` and the frontend on `http://localhost:5173`
-concurrently. Open the frontend URL, sign up, and create a trip.
+concurrently. Open the frontend URL and start creating a trip right away — there's no login or
+signup form. On first load the app silently calls `POST /auth/guest`, which creates a real `User`
+row with a randomly generated name/email and hands the browser a JWT, exactly as if they'd signed
+up; it's just stored automatically instead of asked for. That identity persists in `localStorage`
+across reloads, and the "New session" button in the navbar drops it and mints a fresh one.
 
-To try real-time collaboration, sign up a second account in another browser/profile, invite that
-email as a collaborator from the trip planner's "Bring your people" card, and open the same trip
-in both windows — added/removed/reordered places sync live.
+To try real-time collaboration, open a second browser/profile (so it gets its own guest identity),
+invite that guest's email as a collaborator from the trip planner's "Bring your people" card, and
+open the same trip in both windows — added/removed/reordered places sync live. (A guest's email is
+auto-generated and not shown in the UI; this flow is really meant for testing collaboration
+locally, not for real invites — see the note below.)
 
 ## How the completion + circuit flow works
 
@@ -122,10 +128,12 @@ in both windows — added/removed/reordered places sync live.
 
 ## API overview
 
-All routes are under `/api` and (except `/auth/signup` and `/auth/login`) require an
+All routes are under `/api` and (except `/auth/guest`, `/auth/signup` and `/auth/login`) require an
 `Authorization: Bearer <token>` header.
 
-- `POST /auth/signup`, `POST /auth/login`, `GET /auth/me`
+- `POST /auth/guest` — creates an anonymous `User` + token with no form, used automatically on
+  first load; `POST /auth/signup`, `POST /auth/login`, `GET /auth/me` still exist for a real
+  account, they're just not wired into any UI right now
 - `GET /trips`, `POST /trips`, `GET /trips/:id`, `PATCH /trips/:id`
 - `POST /trips/:id/collaborators` — invite an existing user by email
 - `POST /trips/:id/places`, `DELETE /trips/:id/places/:tripPlaceId`,

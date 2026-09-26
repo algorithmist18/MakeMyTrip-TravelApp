@@ -1,5 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { z } from "zod";
 import { prisma } from "../db";
 import { signToken } from "../utils/jwt";
@@ -8,6 +9,33 @@ import { requireAuth, AuthedRequest } from "../middleware/auth";
 const router = Router();
 
 const AVATAR_COLORS = ["#EF4444", "#F97316", "#0EA5E9", "#10B981", "#8B5CF6", "#EC4899"];
+const GUEST_ADJECTIVES = ["Wandering", "Jetset", "Curious", "Sunny", "Intrepid", "Nomadic"];
+const GUEST_NOUNS = ["Explorer", "Traveler", "Voyager", "Nomad", "Backpacker"];
+
+function randomPick(list: string[]) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// Lets someone start planning without a signup form: a real User row is created
+// behind the scenes so trips/collaborators/sockets keep working unchanged, but
+// the person never sees a password field. The account can be revisited later
+// with the token/email this endpoint returns.
+router.post("/guest", async (_req, res) => {
+  const name = `${randomPick(GUEST_ADJECTIVES)} ${randomPick(GUEST_NOUNS)} ${Math.floor(1000 + Math.random() * 9000)}`;
+  const email = `guest-${crypto.randomBytes(6).toString("hex")}@guests.tripcanvas.local`;
+  const passwordHash = await bcrypt.hash(crypto.randomBytes(16).toString("hex"), 10);
+  const avatarColor = randomPick(AVATAR_COLORS);
+
+  const user = await prisma.user.create({
+    data: { name, email, passwordHash, avatarColor },
+  });
+
+  const token = signToken({ userId: user.id, email: user.email });
+  res.status(201).json({
+    token,
+    user: { id: user.id, name: user.name, email: user.email, avatarColor: user.avatarColor },
+  });
+});
 
 const signupSchema = z.object({
   name: z.string().min(1).max(80),

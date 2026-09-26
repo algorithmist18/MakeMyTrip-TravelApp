@@ -13,7 +13,7 @@ const DECORATIVE_CATEGORIES = [
 ];
 
 export default function NavBar() {
-  const { user, logout } = useAuth();
+  const { user, newIdentity } = useAuth();
   const location = useLocation();
   const isTripCanvas = location.pathname.startsWith("/trips/");
 
@@ -71,10 +71,11 @@ export default function NavBar() {
             </span>
           )}
           <button
-            onClick={logout}
+            onClick={newIdentity}
+            title="Start over as a new person (useful for testing collaboration)"
             className="rounded-full border border-white/20 px-2.5 py-1.5 text-xs font-medium text-white/85 hover:bg-white/10 sm:text-sm"
           >
-            Log out
+            New session
           </button>
         </div>
       </div>

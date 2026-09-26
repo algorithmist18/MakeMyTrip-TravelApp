@@ -16,11 +16,11 @@ api.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error?.response?.status === 401) {
+      // No login page to bounce to: drop the stale identity and reload at "/"
+      // so AuthContext's bootstrap mints a fresh guest session automatically.
       localStorage.removeItem("tt_token");
       localStorage.removeItem("tt_user");
-      if (!window.location.pathname.startsWith("/login")) {
-        window.location.href = "/login";
-      }
+      window.location.href = "/";
     }
     return Promise.reject(error);
   }
