@@ -13,6 +13,7 @@ import ItineraryList from "../components/ItineraryList";
 import TripMap from "../components/TripMap";
 import SmartSpendCard from "../components/SmartSpendCard";
 import InviteCollaboratorsCard from "../components/InviteCollaboratorsCard";
+import LiveHotelPrices from "../components/LiveHotelPrices";
 import TripCompletionPrompt, { CompletionPayload } from "../components/TripCompletionPrompt";
 import TripCircuitCard from "../components/TripCircuitCard";
 
@@ -360,6 +361,13 @@ export default function TripPlanner() {
             travelStyle={trip.travelStyle}
           />
           <InviteCollaboratorsCard collaborators={[trip.creator, ...trip.collaborators]} onInvite={handleInvite} />
+        </div>
+
+        <div className="mt-4">
+          <LiveHotelPrices
+            checkin={trip.startDate.slice(0, 10)}
+            checkout={trip.endDate.slice(0, 10)}
+          />
         </div>
       </div>
 

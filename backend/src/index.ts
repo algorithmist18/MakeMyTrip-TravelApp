@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth";
 import tripRoutes from "./routes/trips";
 import placeRoutes from "./routes/places";
 import hotelRoutes from "./routes/hotels";
+import liveHotelRoutes from "./routes/liveHotels";
 import wrappedRoutes from "./routes/wrapped";
 import { registerTripCollab } from "./sockets/tripCollab";
 import { setIo } from "./sockets/bus";
@@ -23,6 +24,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/places", placeRoutes);
 app.use("/api/hotels", hotelRoutes);
+app.use("/api/live-hotels", liveHotelRoutes);
 app.use("/api/wrapped", wrappedRoutes);
 
 const server = http.createServer(app);

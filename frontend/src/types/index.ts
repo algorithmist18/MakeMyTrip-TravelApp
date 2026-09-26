@@ -71,6 +71,12 @@ export interface Trip {
   extraActivities: ExtraActivity[];
 }
 
+export interface LiveHotelAvailability {
+  accommodationId: string;
+  currency: string;
+  price: number;
+}
+
 export interface WrappedCircuitPoint {
   tripId: string;
   title: string;

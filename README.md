@@ -27,6 +27,10 @@ that turns your confirmed trips into a shareable year-in-travel recap.
    completed, cities visited, days traveled, top travel style), a circuit map connecting your
    destinations in chronological order, and a downloadable shareable recap card (PNG), Strava
    "Year in Sport"-style.
+6. **Live hotel prices (Booking.com Demand API — optional)** — a "Live Booking.com prices" card on
+   the trip planner shows a clear "Not connected" state until you have real Booking.com Partner
+   Centre credentials; see [Live pricing (Booking.com)](#live-pricing-bookingcom) below before
+   expecting this to work out of the box.
 
 ## Stack
 
@@ -115,6 +119,9 @@ All routes are under `/api` and (except `/auth/signup` and `/auth/login`) requir
 - `POST /trips/:id/complete` — `{ didYouDoIt: boolean, visitedTripPlaceIds?: string[], extraActivities?: string[] }`
 - `GET /places?destination=bangkok` — curated place catalog per destination
 - `GET /hotels?destination=bangkok` — curated hotel catalog (budget/mid/luxury) per destination
+- `GET /live-hotels/status` — whether Booking.com Demand API credentials are configured
+- `GET /live-hotels/availability?accommodationIds=1,2&checkin=YYYY-MM-DD&checkout=YYYY-MM-DD` — live
+  pricing via Booking.com (503 if not configured; see below)
 - `GET /wrapped` — years that have confirmed trips; `GET /wrapped/:year` — full recap for a year
 
 Socket.io events: client emits `join_trip` / `leave_trip` with a trip id; server broadcasts
@@ -138,6 +145,39 @@ it's selectable when creating a trip and displays correctly everywhere (trip car
 the planner header) — `destinationLabel()`/`destinationFullLabel()` from that file are what those
 screens use instead of the raw key. A hotel entry needs a `tier` of `"budget"`, `"mid"`, or
 `"luxury"` — this is what the trip planner sorts against each travel style's preferred tier order.
+
+## Live pricing (Booking.com)
+
+The "Live Booking.com prices" card (`frontend/src/components/LiveHotelPrices.tsx`) calls
+`backend/src/services/bookingService.ts`, which wraps Booking.com's Demand API
+`POST /accommodations/availability`. Before it can do anything useful:
+
+1. **It's not self-serve.** Booking.com's Demand API requires becoming a Managed Affiliate Partner
+   — a signed contract, an assigned Account Manager, and Partner Centre-issued credentials (an API
+   bearer token and an affiliate ID) — for sandbox access, let alone production.
+2. **Check Booking's partner terms before using AI tooling here.** Booking's General Partner Terms
+   have required prior written approval from Booking.com before AI systems can be used to build
+   against their APIs. Get that sign-off (or confirm your contract's current terms) before treating
+   this integration as something to extend with AI assistance.
+3. **The request/response shape here is a best-effort reconstruction**, not verified against live
+   docs — `developers.booking.com` was unreachable from the environment this was built in. The
+   fields used (`accommodation.ids`, `booker.country`/`booker.platform`, `checkin`/`checkout`,
+   `guests.number_of_adults`/`number_of_rooms`, an `extras` array) come from public documentation
+   summaries. Once you have real Partner Centre access, verify field names and
+   `BOOKING_API_BASE_URL` against your own docs/Postman collection and adjust
+   `bookingService.ts` accordingly.
+
+To enable it once you have credentials, set in `backend/.env`:
+
+```
+BOOKING_API_BASE_URL="https://demandapi.booking.com/3.1"   # verify against your own docs
+BOOKING_API_KEY="<partner-centre-bearer-token>"
+BOOKING_AFFILIATE_ID="<your-affiliate-id>"
+```
+
+Without these, `GET /live-hotels/status` reports `connected: false` and the frontend card shows a
+"Not connected" state with setup instructions instead of erroring — this is the expected state for
+almost everyone running this project.
 
 ## Adding more travel styles
 
