@@ -52,7 +52,7 @@ export default function TripCircuitCard({ trip }: Props) {
 
     ctx.fillStyle = "#ffffff";
     ctx.font = "700 36px Inter, sans-serif";
-    ctx.fillText("TripTogether Circuit", 64, 100);
+    ctx.fillText("TripCanvas Circuit", 64, 100);
     ctx.font = "800 64px Inter, sans-serif";
     ctx.fillText(trip.title, 64, 180, CANVAS_WIDTH - 128);
     ctx.font = "500 30px Inter, sans-serif";
@@ -167,7 +167,7 @@ export default function TripCircuitCard({ trip }: Props) {
 
     ctx.font = "600 26px Inter, sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.7)";
-    ctx.fillText("Plan together. Flex together. — TripTogether", 64, CANVAS_HEIGHT - 60);
+    ctx.fillText("Plan together. Flex together. — TripCanvas", 64, CANVAS_HEIGHT - 60);
 
     const link = document.createElement("a");
     link.download = `triptogether-circuit-${trip.id}.png`;
@@ -177,7 +177,7 @@ export default function TripCircuitCard({ trip }: Props) {
 
   return (
     <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-5 text-white shadow-lg">
-      <p className="text-xs font-bold uppercase tracking-wide text-white/80">TripTogether Circuit</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-white/80">TripCanvas Circuit</p>
       <h3 className="text-xl font-extrabold">{trip.title}</h3>
       <p className="text-sm text-white/80">{destinationLabel(trip.destination)}</p>
 

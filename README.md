@@ -1,14 +1,17 @@
-# TripTogether
+# TripCanvas by MakeMyTrip
 
-A collaborative trip planner in the spirit of MakeMyTrip/Wanderlog, plus a Strava-style "Wrapped"
-that turns your confirmed trips into a shareable year-in-travel recap.
+A collaborative trip planner styled after MakeMyTrip's own holiday-package flow — image gallery,
+day-plan rail, tabbed itinerary/reviews/disruptions, sticky price panel — plus a Strava-style
+"Wrapped" that turns your confirmed trips into a shareable year-in-travel recap.
 
 ## What's in here
 
-1. **Collaborative itinerary builder** — create a trip, pick a destination, and build a day-by-day
-   itinerary with friends in real time. A live Google Map shows numbered stops and the route
-   between them, mirroring the MakeMyTrip-style planner UI (travel-style selector, place cards,
-   "hidden gems" section, smart daily spend estimate, invite-collaborators card). Every add,
+1. **Collaborative itinerary builder, styled like an MMT holiday package** — create a trip, pick a
+   destination, and build a day-by-day itinerary with friends in real time. The trip page mirrors
+   MakeMyTrip's own package-detail flow: an image gallery header, a title row with duration/Flexi
+   Plan tags, a tabbed layout (Itinerary / Local Intel & Reviews / Disruptions), a left "Day Plan"
+   rail for jumping between days, and a sticky right-hand price panel (with a mock coupon) next to
+   the live map. A live Google Map shows numbered stops and the route between them. Every add,
    remove, and reorder is broadcast over a WebSocket to everyone else viewing the trip.
 2. **Six travel styles that actually reshape the trip** — Luxury, Chill, Romantic, Family,
    Cost-saving, and Backpacking each carry their own daily spend estimate, suggested pace (e.g.
@@ -31,6 +34,14 @@ that turns your confirmed trips into a shareable year-in-travel recap.
    the trip planner shows a clear "Not connected" state until you have real Booking.com Partner
    Centre credentials; see [Live pricing (Booking.com)](#live-pricing-bookingcom) below before
    expecting this to work out of the box.
+7. **Verified reviews + local intelligence** — the "Local Intel & Reviews" tab shows destination-level
+   insider tips (transport, money, customs, safety, weather, connectivity) plus verified-traveler
+   reviews (rating, trip type, month visited, helpful count) for every place in your itinerary.
+8. **Agentic disruption simulator** — the "Disruptions" tab lets you simulate a flight delay, a hotel
+   overbooking, or a rental car falling through, and shows a step-by-step plan of what an AI trip
+   agent would do about it — some steps auto-resolved, others flagged for your approval or as
+   at-risk — including pulling a real same-tier backup hotel from the destination's own catalog.
+   This is a rule-based simulation for demonstrating the UX, not a live agent wired to real bookings.
 
 ## Stack
 
@@ -122,6 +133,11 @@ All routes are under `/api` and (except `/auth/signup` and `/auth/login`) requir
 - `GET /live-hotels/status` — whether Booking.com Demand API credentials are configured
 - `GET /live-hotels/availability?accommodationIds=1,2&checkin=YYYY-MM-DD&checkout=YYYY-MM-DD` — live
   pricing via Booking.com (503 if not configured; see below)
+- `GET /places/:id/reviews` — verified reviews for a place
+- `GET /local-intel?destination=bangkok` — insider tips for a destination
+- `GET /trips/:id/disruptions` — a trip's simulated disruptions and their action plans
+- `POST /trips/:id/disruptions/simulate` — `{ scenarioType: "flight_delay"|"hotel_overbooked"|"car_unavailable", delayHours? }`
+- `POST /trips/:id/disruptions/:disruptionId/apply` / `.../dismiss`
 - `GET /wrapped` — years that have confirmed trips; `GET /wrapped/:year` — full recap for a year
 
 Socket.io events: client emits `join_trip` / `leave_trip` with a trip id; server broadcasts
@@ -178,6 +194,21 @@ BOOKING_AFFILIATE_ID="<your-affiliate-id>"
 Without these, `GET /live-hotels/status` reports `connected: false` and the frontend card shows a
 "Not connected" state with setup instructions instead of erroring — this is the expected state for
 almost everyone running this project.
+
+## Reviews, local intel, and the disruption agent
+
+- **Reviews** are generated deterministically in `backend/prisma/seed.ts` (`generateReviews`) from a
+  small pool of reviewer names, trip types, and review templates, hashed by place name so re-seeding
+  is reproducible rather than random. Add real reviews the same way, or replace the generator with
+  hand-written ones per place.
+- **Local intel** tips are hand-written per destination in the `localIntel` array in the same seed
+  file — add more by giving each a `destination`, `category` (`weather`/`money`/`transport`/`custom`/
+  `safety`/`connectivity`), `title`, and `tip`.
+- **Disruptions** are computed live, not seeded — `backend/src/services/disruptionService.ts` holds
+  the rule-based logic for each scenario (`flight_delay`, `hotel_overbooked`, `car_unavailable`).
+  Each simulation is persisted as a `Disruption` + its `DisruptionAction`s so the plan survives a
+  page reload. To add a new scenario, extend `ScenarioType`, add a branch in `simulateDisruption()`,
+  and add it to `SCENARIOS` in `frontend/src/components/DisruptionsTab.tsx`.
 
 ## Adding more travel styles
 

@@ -12,7 +12,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center text-ink-500">
-        Loading TripTogether…
+        Loading TripCanvas…
       </div>
     );
   }

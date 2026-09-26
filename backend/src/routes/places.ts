@@ -16,6 +16,14 @@ router.get("/", requireAuth, async (req, res) => {
   res.json({ places });
 });
 
+router.get("/:id/reviews", requireAuth, async (req, res) => {
+  const reviews = await prisma.review.findMany({
+    where: { placeId: req.params.id },
+    orderBy: { helpfulCount: "desc" },
+  });
+  res.json({ reviews });
+});
+
 router.get("/destinations", requireAuth, async (_req, res) => {
   const rows = await prisma.place.findMany({
     distinct: ["destination"],

@@ -33,7 +33,7 @@ export default function WrappedShareCard({ data, user }: Props) {
 
     ctx.fillStyle = "#ffffff";
     ctx.font = "700 40px Inter, sans-serif";
-    ctx.fillText("TripTogether Wrapped", 64, 120);
+    ctx.fillText("TripCanvas Wrapped", 64, 120);
     ctx.font = "800 120px Inter, sans-serif";
     ctx.fillText(String(data.year), 64, 250);
 
@@ -67,7 +67,7 @@ export default function WrappedShareCard({ data, user }: Props) {
 
     ctx.font = "600 26px Inter, sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.7)";
-    ctx.fillText("Plan together. Flex together. — TripTogether", 64, HEIGHT - 60);
+    ctx.fillText("Plan together. Flex together. — TripCanvas", 64, HEIGHT - 60);
 
     const link = document.createElement("a");
     link.download = `triptogether-wrapped-${data.year}.png`;

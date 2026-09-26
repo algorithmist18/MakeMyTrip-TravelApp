@@ -37,6 +37,7 @@ model Trip {
   collaborators   TripCollaborator[]
   places          TripPlace[]
   extraActivities ExtraActivity[]
+  disruptions     Disruption[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 }
@@ -66,6 +67,7 @@ model Place {
   imageUrl      String?
   isHiddenGem   Boolean     @default(false)
   tripPlaces    TripPlace[]
+  reviews       Review[]
 }
 
 model Hotel {
@@ -103,4 +105,50 @@ model ExtraActivity {
   trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
   title     String
   createdAt DateTime @default(now())
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  placeId       String
+  place         Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  reviewerName  String
+  rating        Float
+  verified      Boolean  @default(true)
+  tripType      String // "Solo" | "Couple" | "Family" | "Friends"
+  visitedMonth  String // e.g. "Aug 2026"
+  text          String
+  helpfulCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+}
+
+model LocalIntel {
+  id          String @id @default(cuid())
+  destination String
+  category    String // "weather" | "money" | "transport" | "custom" | "safety" | "connectivity"
+  title       String
+  tip         String
+}
+
+model Disruption {
+  id            String             @id @default(cuid())
+  tripId        String
+  trip          Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  scenarioType  String // "flight_delay" | "hotel_overbooked" | "car_unavailable"
+  label         String
+  summary       String
+  status        String             @default("proposed") // "proposed" | "applied" | "dismissed"
+  createdAt     DateTime           @default(now())
+  actions       DisruptionAction[]
+}
+
+model DisruptionAction {
+  id           String     @id @default(cuid())
+  disruptionId String
+  disruption   Disruption @relation(fields: [disruptionId], references: [id], onDelete: Cascade)
+  icon         String
+  title        String
+  detail       String
+  outcome      String // "auto-resolved" | "needs-confirmation" | "at-risk"
+  status       String     @default("proposed") // "proposed" | "applied"
+  order        Int        @default(0)
 }

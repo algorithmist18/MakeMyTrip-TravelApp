@@ -77,6 +77,48 @@ export interface LiveHotelAvailability {
   price: number;
 }
 
+export interface Review {
+  id: string;
+  reviewerName: string;
+  rating: number;
+  verified: boolean;
+  tripType: string;
+  visitedMonth: string;
+  text: string;
+  helpfulCount: number;
+  createdAt: string;
+}
+
+export interface LocalIntelTip {
+  id: string;
+  destination: string;
+  category: string;
+  title: string;
+  tip: string;
+}
+
+export type DisruptionScenarioType = "flight_delay" | "hotel_overbooked" | "car_unavailable";
+export type DisruptionOutcome = "auto-resolved" | "needs-confirmation" | "at-risk";
+
+export interface DisruptionAction {
+  id: string;
+  icon: string;
+  title: string;
+  detail: string;
+  outcome: DisruptionOutcome;
+  status: "proposed" | "applied";
+}
+
+export interface Disruption {
+  id: string;
+  scenarioType: DisruptionScenarioType;
+  label: string;
+  summary: string;
+  status: "proposed" | "applied" | "dismissed";
+  createdAt: string;
+  actions: DisruptionAction[];
+}
+
 export interface WrappedCircuitPoint {
   tripId: string;
   title: string;

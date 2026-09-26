@@ -8,6 +8,8 @@ import tripRoutes from "./routes/trips";
 import placeRoutes from "./routes/places";
 import hotelRoutes from "./routes/hotels";
 import liveHotelRoutes from "./routes/liveHotels";
+import localIntelRoutes from "./routes/localIntel";
+import disruptionRoutes from "./routes/disruptions";
 import wrappedRoutes from "./routes/wrapped";
 import { registerTripCollab } from "./sockets/tripCollab";
 import { setIo } from "./sockets/bus";
@@ -21,10 +23,12 @@ app.use(express.json());
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRoutes);
+app.use("/api/trips/:tripId/disruptions", disruptionRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/places", placeRoutes);
 app.use("/api/hotels", hotelRoutes);
 app.use("/api/live-hotels", liveHotelRoutes);
+app.use("/api/local-intel", localIntelRoutes);
 app.use("/api/wrapped", wrappedRoutes);
 
 const server = http.createServer(app);

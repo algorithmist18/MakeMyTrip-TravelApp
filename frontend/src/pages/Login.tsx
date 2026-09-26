@@ -29,9 +29,12 @@ export default function Login() {
       <div className="w-full max-w-sm rounded-2xl border border-ink-900/5 bg-white p-8 shadow-xl shadow-ink-900/5">
         <div className="mb-6 flex items-center gap-2">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-600 text-sm font-extrabold text-white">
-            TT
+            TC
           </span>
-          <span className="text-xl font-extrabold tracking-tight">TripTogether</span>
+          <div>
+            <span className="block text-xl font-extrabold leading-none tracking-tight">TripCanvas</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-wide text-ink-500">by MakeMyTrip</span>
+          </div>
         </div>
         <h1 className="text-2xl font-bold text-ink-900">Welcome back</h1>
         <p className="mt-1 text-sm text-ink-500">Plan trips together. Flex what you finished.</p>

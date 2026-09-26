@@ -120,12 +120,104 @@ const hotels = [
   { destination: "krabi", name: "Koh Hong Island Luxury Retreat", neighborhood: "Andaman Sea", rating: 4.8, pricePerNight: 12500, tier: "luxury", lat: 8.1500, lng: 98.8150, imageUrl: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800" },
 ];
 
+// --- Reviews: deterministically generated so re-seeding is reproducible,
+// rather than hand-authoring 100+ unique lines across 44 places. ---
+const REVIEWER_NAMES = [
+  "Ananya Sharma", "Rohan Mehta", "Priya Nair", "Karan Kapoor", "Simran Kaur",
+  "Arjun Rao", "Neha Gupta", "Vikram Singh", "Ishita Desai", "Aditya Verma",
+  "Meera Pillai", "Rahul Iyer", "Sanya Malhotra", "Aman Joshi", "Divya Reddy",
+];
+const TRIP_TYPES = ["Solo", "Couple", "Family", "Friends"];
+const VISIT_MONTHS = ["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
+const REVIEW_TEMPLATES = [
+  (p: string) => `${p} was the highlight of our trip — go early to beat the crowds, the light is best in the morning.`,
+  (p: string) => `Loved ${p}. A little touristy but absolutely worth it, especially for photos.`,
+  (p: string) => `We almost skipped ${p} but so glad we didn't — quieter and more beautiful than we expected.`,
+  (p: string) => `Book tickets online for ${p} if you can, saved us a long queue.`,
+  (p: string) => `${p} is a must if you're nearby. Budget more time than you think — we rushed and regretted it.`,
+  (p: string) => `Solid experience at ${p}, though it gets busy on weekends. Go on a weekday if possible.`,
+  (p: string) => `${p} exceeded expectations. Our guide knew a ton of local history, made it much more memorable.`,
+  (p: string) => `Nice stop at ${p} but overpriced food stalls nearby — eat before or after.`,
+];
+
+function hashSeed(input: string): number {
+  let h = 0;
+  for (let i = 0; i < input.length; i++) {
+    h = (h * 31 + input.charCodeAt(i)) >>> 0;
+  }
+  return h;
+}
+
+function pick<T>(arr: T[], seed: number, salt: number): T {
+  const idx = (seed + salt * 2654435761) % arr.length;
+  return arr[idx];
+}
+
+function generateReviews(placeId: string, placeName: string, baseRating: number) {
+  const seed = hashSeed(placeName);
+  const count = 3;
+  return Array.from({ length: count }, (_, i) => {
+    const s = seed + i * 97;
+    const ratingJitter = [(-0.3), 0, 0.2][i % 3];
+    return {
+      placeId,
+      reviewerName: pick(REVIEWER_NAMES, s, 1),
+      rating: Math.max(3.5, Math.min(5, Math.round((baseRating + ratingJitter) * 10) / 10)),
+      verified: i !== 2 || s % 5 !== 0, // occasionally unverified for contrast
+      tripType: pick(TRIP_TYPES, s, 2),
+      visitedMonth: pick(VISIT_MONTHS, s, 3),
+      text: pick(REVIEW_TEMPLATES, s, 4)(placeName),
+      helpfulCount: (s % 40) + 2,
+    };
+  });
+}
+
+// --- Local intelligence: hand-written, destination-level insider tips. ---
+const localIntel = [
+  // Bangkok
+  { destination: "bangkok", category: "transport", title: "Get a Rabbit Card", tip: "Load a Rabbit Card for the BTS Skytrain — much faster than taxis in traffic and avoids haggling with tuk-tuks." },
+  { destination: "bangkok", category: "money", title: "Carry small THB notes", tip: "Street food and tuk-tuks rarely break 1000 THB notes. Keep a stock of 20s, 50s, and 100s." },
+  { destination: "bangkok", category: "custom", title: "Dress modestly for temples", tip: "Shoulders and knees must be covered at the Grand Palace and Wat Pho — sarongs are sold at the gate if you forget." },
+  { destination: "bangkok", category: "weather", title: "April is the hottest month", tip: "March–May is brutally hot and humid; October–February is far more comfortable for walking around." },
+  // Phuket
+  { destination: "phuket", category: "safety", title: "Rent a helmet with your scooter", tip: "Helmet laws are enforced on main roads in Phuket, and hospital bills for tourists aren't cheap." },
+  { destination: "phuket", category: "weather", title: "Avoid the west coast in monsoon", tip: "May–October brings rough seas on Patong/Kata beaches — swim flags matter, red means stay out." },
+  { destination: "phuket", category: "transport", title: "Book Phi Phi tours a day ahead", tip: "Speedboat tours to Phi Phi sell out in peak season (Dec–Feb) — book the evening before." },
+  { destination: "phuket", category: "money", title: "Negotiate tuk-tuk fares upfront", tip: "Always agree on a price before getting in — Phuket tuk-tuks are notoriously pricier than Bangkok's." },
+  // Chiang Mai
+  { destination: "chiang-mai", category: "custom", title: "Choose an ethical elephant sanctuary", tip: "Look for 'no riding' sanctuaries like Elephant Nature Park — riding camps are widely considered harmful to the elephants." },
+  { destination: "chiang-mai", category: "weather", title: "Burning season affects air quality", tip: "Feb–April sees agricultural burning that spikes air pollution — check AQI if you have respiratory sensitivities." },
+  { destination: "chiang-mai", category: "transport", title: "Songthaews are the local ride", tip: "Red shared trucks (songthaews) are cheaper than Grab within the Old City — flag one down and confirm the fare." },
+  { destination: "chiang-mai", category: "connectivity", title: "eSIMs work well here", tip: "AIS and dtac eSIMs are easy to activate on arrival and cover rural day-trip routes like Doi Suthep well." },
+  // Pattaya
+  { destination: "pattaya", category: "safety", title: "Stick to metered or app taxis", tip: "Use Grab rather than unmetered baht buses/taxis at night around Walking Street to avoid overcharging." },
+  { destination: "pattaya", category: "custom", title: "Nightlife areas are concentrated", tip: "Walking Street is intense after dark — Jomtien Beach nearby is a much quieter, family-friendly alternative." },
+  { destination: "pattaya", category: "transport", title: "Songthaews loop the main roads", tip: "Baht buses (shared songthaews) run fixed loops for a flat fare — cheap but confirm your stop with the driver." },
+  // Krabi
+  { destination: "krabi", category: "transport", title: "Longtail boats need cash", tip: "Most longtail boat operators to Railay/the Four Islands don't take cards — carry enough THB cash for the day." },
+  { destination: "krabi", category: "weather", title: "Best visibility Nov–Apr", tip: "Dry season (Nov–Apr) gives the clearest water for the Four Islands tour; rainy season can cancel boat trips." },
+  { destination: "krabi", category: "safety", title: "Check tide times for Railay", tip: "Some beach paths in Railay are only walkable at low tide — check tide tables before planning your day." },
+  // Goa
+  { destination: "goa", category: "transport", title: "Rent a scooter for North Goa", tip: "A rented scooter (₹300–400/day) is the easiest way to hop between Baga, Anjuna, and Candolim." },
+  { destination: "goa", category: "custom", title: "Beach shacks close by law in monsoon", tip: "Many beach shacks shut June–September during monsoon season — check ahead if that's core to your plan." },
+  { destination: "goa", category: "money", title: "ATMs run out on weekends", tip: "Withdraw cash on weekdays — North Goa ATMs can run dry over weekends in peak season." },
+  { destination: "goa", category: "safety", title: "Strong currents at Baga/Anjuna", tip: "Rip currents are a real risk on the more popular beaches — swim near lifeguard flags, especially in monsoon swell." },
+  // Manali
+  { destination: "manali", category: "weather", title: "Snow closes Solang Valley roads", tip: "Dec–Feb can bring snow closures on the Solang/Rohtang road — check conditions the morning of, not the night before." },
+  { destination: "manali", category: "custom", title: "Altitude affects some travelers", tip: "Manali itself is manageable, but day trips higher up can cause mild altitude symptoms — pace yourself and hydrate." },
+  { destination: "manali", category: "transport", title: "Old Manali is best explored on foot", tip: "Old Manali's cafes and lanes are walkable — most day-trippers don't need a cab once they're there." },
+  { destination: "manali", category: "connectivity", title: "Signal drops past Solang", tip: "Network coverage gets patchy beyond Solang Valley — download offline maps before heading up." },
+];
+
 async function main() {
+  const placeIdByKey = new Map<string, string>();
+
   for (const place of places) {
-    const existing = await prisma.place.findFirst({ where: { destination: place.destination, name: place.name } });
-    if (!existing) {
-      await prisma.place.create({ data: place });
+    let record = await prisma.place.findFirst({ where: { destination: place.destination, name: place.name } });
+    if (!record) {
+      record = await prisma.place.create({ data: place });
     }
+    placeIdByKey.set(`${place.destination}::${place.name}`, record.id);
   }
   console.log(`Seeded ${places.length} places.`);
 
@@ -136,6 +228,29 @@ async function main() {
     }
   }
   console.log(`Seeded ${hotels.length} hotels.`);
+
+  let reviewCount = 0;
+  for (const place of places) {
+    const placeId = placeIdByKey.get(`${place.destination}::${place.name}`)!;
+    const existingReviews = await prisma.review.count({ where: { placeId } });
+    if (existingReviews > 0) continue;
+    const reviews = generateReviews(placeId, place.name, place.rating);
+    for (const review of reviews) {
+      await prisma.review.create({ data: review });
+    }
+    reviewCount += reviews.length;
+  }
+  console.log(`Seeded ${reviewCount} reviews.`);
+
+  for (const intel of localIntel) {
+    const existing = await prisma.localIntel.findFirst({
+      where: { destination: intel.destination, title: intel.title },
+    });
+    if (!existing) {
+      await prisma.localIntel.create({ data: intel });
+    }
+  }
+  console.log(`Seeded ${localIntel.length} local intel tips.`);
 }
 
 main()
