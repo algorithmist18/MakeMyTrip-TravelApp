@@ -17,6 +17,7 @@ model User {
   createdTrips Trip[]             @relation("TripCreator")
   collabs      TripCollaborator[]
   addedPlaces  TripPlace[]
+  addedHotels  TripHotel[]
 }
 
 model Trip {
@@ -36,6 +37,7 @@ model Trip {
   creator         User               @relation("TripCreator", fields: [creatorId], references: [id])
   collaborators   TripCollaborator[]
   places          TripPlace[]
+  hotels          TripHotel[]
   extraActivities ExtraActivity[]
   disruptions     Disruption[]
   createdAt       DateTime           @default(now())
@@ -81,6 +83,20 @@ model Hotel {
   lat           Float
   lng           Float
   imageUrl      String?
+  tripHotels    TripHotel[]
+}
+
+model TripHotel {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  hotelId   String
+  hotel     Hotel    @relation(fields: [hotelId], references: [id])
+  addedById String?
+  addedBy   User?    @relation(fields: [addedById], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([tripId, hotelId])
 }
 
 model TripPlace {

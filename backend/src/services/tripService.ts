@@ -25,6 +25,13 @@ export async function getFullTrip(tripId: string) {
           addedBy: { select: { id: true, name: true, avatarColor: true } },
         },
       },
+      hotels: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          hotel: true,
+          addedBy: { select: { id: true, name: true, avatarColor: true } },
+        },
+      },
       extraActivities: { orderBy: { createdAt: "asc" } },
     },
   });
@@ -80,6 +87,22 @@ export async function addPlaceToTrip(tripId: string, placeId: string, userId: st
 
 export async function removePlaceFromTrip(tripId: string, tripPlaceId: string) {
   return prisma.tripPlace.deleteMany({ where: { id: tripPlaceId, tripId } });
+}
+
+export async function addHotelToTrip(tripId: string, hotelId: string, userId: string) {
+  const existing = await prisma.tripHotel.findUnique({
+    where: { tripId_hotelId: { tripId, hotelId } },
+  });
+  if (existing) return existing;
+
+  return prisma.tripHotel.create({
+    data: { tripId, hotelId, addedById: userId },
+    include: { hotel: true, addedBy: { select: { id: true, name: true, avatarColor: true } } },
+  });
+}
+
+export async function removeHotelFromTrip(tripId: string, tripHotelId: string) {
+  return prisma.tripHotel.deleteMany({ where: { id: tripHotelId, tripId } });
 }
 
 export interface ReorderItem {

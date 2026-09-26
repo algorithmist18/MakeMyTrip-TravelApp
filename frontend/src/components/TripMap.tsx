@@ -1,19 +1,21 @@
 import { useMemo } from "react";
 import { GoogleMap, Marker, Polyline, useJsApiLoader } from "@react-google-maps/api";
-import { ItineraryItem } from "../types";
+import { ItineraryItem, TripHotel } from "../types";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const HOTEL_ICON = "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
 
 interface Props {
   centerLat: number;
   centerLng: number;
   itinerary: ItineraryItem[];
+  hotels: TripHotel[];
   activeDay: number | "all";
 }
 
 const containerStyle = { width: "100%", height: "100%" };
 
-export default function TripMap({ centerLat, centerLng, itinerary, activeDay }: Props) {
+export default function TripMap({ centerLat, centerLng, itinerary, hotels, activeDay }: Props) {
   const { isLoaded } = useJsApiLoader({
     id: "trip-together-map",
     googleMapsApiKey: API_KEY || "",
@@ -42,6 +44,12 @@ export default function TripMap({ centerLat, centerLng, itinerary, activeDay }: 
               {item.place.name}
             </li>
           ))}
+          {hotels.map((th) => (
+            <li key={th.tripHotelId}>
+              <span className="mr-1 font-bold text-accent-600">🏨</span>
+              {th.hotel.name}
+            </li>
+          ))}
         </ul>
       </div>
     );
@@ -63,6 +71,14 @@ export default function TripMap({ centerLat, centerLng, itinerary, activeDay }: 
           key={item.tripPlaceId}
           position={{ lat: item.place.lat, lng: item.place.lng }}
           label={{ text: String(idx + 1), color: "white", fontWeight: "700" }}
+        />
+      ))}
+      {hotels.map((th) => (
+        <Marker
+          key={th.tripHotelId}
+          position={{ lat: th.hotel.lat, lng: th.hotel.lng }}
+          icon={HOTEL_ICON}
+          title={th.hotel.name}
         />
       ))}
       {path.length > 1 && (

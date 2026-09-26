@@ -75,6 +75,7 @@ export default function TripPlanner() {
   }, [trip]);
 
   const addedPlaceIds = useMemo(() => new Set(trip?.itinerary.map((i) => i.place.id) ?? []), [trip]);
+  const addedHotelIds = useMemo(() => new Set(trip?.hotels.map((h) => h.hotel.id) ?? []), [trip]);
   const regularPlaces = places.filter((p) => !p.isHiddenGem);
   const gemPlaces = places.filter((p) => p.isHiddenGem);
   const styleMeta = trip ? TRAVEL_STYLE_MAP[trip.travelStyle] : undefined;
@@ -127,6 +128,30 @@ export default function TripPlanner() {
     setBusy(true);
     try {
       await api.delete(`/trips/${trip.id}/places/${tripPlaceId}`);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleAddHotel(hotel: Hotel) {
+    if (!trip) return;
+    setBusy(true);
+    try {
+      await api.post(`/trips/${trip.id}/hotels`, { hotelId: hotel.id });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleRemoveHotel(hotel: Hotel) {
+    if (!trip) return;
+    const entry = trip.hotels.find((h) => h.hotel.id === hotel.id);
+    if (!entry) return;
+    setBusy(true);
+    try {
+      await api.delete(`/trips/${trip.id}/hotels/${entry.tripHotelId}`);
       await refresh();
     } finally {
       setBusy(false);
@@ -380,11 +405,21 @@ export default function TripPlanner() {
                   <p className="text-xs font-bold uppercase tracking-wide text-brand-600">🏨 Stay nearby</p>
                   <h2 className="text-lg font-bold text-ink-900">Suggested hotels</h2>
                   <p className="mb-3 text-xs text-ink-500">
-                    Matched to your {styleMeta?.title.toLowerCase() ?? ""} style, closest first.
+                    Matched to your {styleMeta?.title.toLowerCase() ?? ""} style, closest first. Added hotels
+                    show up on the map too.
                   </p>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {sortedHotels.map(({ hotel, distanceKm, tierRank }) => (
-                      <HotelCard key={hotel.id} hotel={hotel} distanceKm={distanceKm} matchesStyle={tierRank === 0} />
+                      <HotelCard
+                        key={hotel.id}
+                        hotel={hotel}
+                        distanceKm={distanceKm}
+                        matchesStyle={tierRank === 0}
+                        added={addedHotelIds.has(hotel.id)}
+                        onAdd={handleAddHotel}
+                        onRemove={handleRemoveHotel}
+                        busy={busy}
+                      />
                     ))}
                   </div>
                 </div>
@@ -412,18 +447,19 @@ export default function TripPlanner() {
               <LiveHotelPrices checkin={trip.startDate.slice(0, 10)} checkout={trip.endDate.slice(0, 10)} />
             </div>
 
-            <div className="lg:w-[340px] lg:shrink-0">
+            <div className="lg:w-[480px] lg:shrink-0">
               <div className="space-y-3 lg:sticky lg:top-20">
                 <PricePanel totalPrice={totalPrice} travelerCount={trip.travelerCount} />
-                <div className="relative h-72 overflow-hidden rounded-2xl border border-ink-900/5 shadow-sm">
+                <div className="relative h-[420px] overflow-hidden rounded-2xl border border-ink-900/5 shadow-sm lg:h-[600px]">
                   <div className="absolute bottom-3 right-3 z-10 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-ink-700 shadow">
                     {(activeDay === "all" ? trip.itinerary : trip.itinerary.filter((i) => i.day === activeDay)).length}{" "}
-                    places on your map
+                    places · {trip.hotels.length} hotel{trip.hotels.length === 1 ? "" : "s"} on your map
                   </div>
                   <TripMap
                     centerLat={trip.destinationLat ?? 13.7563}
                     centerLng={trip.destinationLng ?? 100.5018}
                     itinerary={trip.itinerary}
+                    hotels={trip.hotels}
                     activeDay={activeDay}
                   />
                 </div>

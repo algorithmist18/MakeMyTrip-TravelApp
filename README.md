@@ -11,15 +11,18 @@ day-plan rail, tabbed itinerary/reviews/disruptions, sticky price panel — plus
    MakeMyTrip's own package-detail flow: an image gallery header, a title row with duration/Flexi
    Plan tags, a tabbed layout (Itinerary / Local Intel & Reviews / Disruptions), a left "Day Plan"
    rail for jumping between days, and a sticky right-hand price panel (with a mock coupon) next to
-   the live map. A live Google Map shows numbered stops and the route between them. Every add,
-   remove, and reorder is broadcast over a WebSocket to everyone else viewing the trip.
+   a large live Google Map (480×600 on desktop). Numbered pins trace the route between your
+   itinerary places; every add, remove, and reorder is broadcast over a WebSocket to everyone else
+   viewing the trip.
 2. **Six travel styles that actually reshape the trip** — Luxury, Chill, Romantic, Family,
    Cost-saving, and Backpacking each carry their own daily spend estimate, suggested pace (e.g.
    "1–2 stops/day" for Chill vs. "3–4 stops/day" for Backpacking), and target place count, all
    defined in `frontend/src/constants/travelStyles.ts`.
-3. **Nearby hotel suggestions** — each trip's planner shows hotels for that destination, sorted by
-   how well their price tier (budget/mid/luxury) matches the selected travel style, then by
-   distance from the trip's destination center; the best-tier matches are flagged "Best match".
+3. **Hotels you can actually add to the trip** — suggested hotels are sorted by how well their
+   price tier (budget/mid/luxury) matches your travel style, then by distance from the trip's
+   destination center (best-tier matches flagged "Best match"). "+ Add to trip" attaches a hotel to
+   the trip (a `TripHotel` join row) and drops a distinct blue pin for it on the map alongside your
+   itinerary's numbered red pins — so your accommodation is visible next to your day-by-day stops.
 4. **Post-trip check-in + shareable circuit** — once a trip's end date passes, the app asks: did
    you go? If yes, it shows a checklist of everything that was planned (uncheck what you skipped)
    plus a free-text "anything else you did?" box for unplanned stops. That builds a per-trip
@@ -127,6 +130,8 @@ All routes are under `/api` and (except `/auth/signup` and `/auth/login`) requir
 - `POST /trips/:id/collaborators` — invite an existing user by email
 - `POST /trips/:id/places`, `DELETE /trips/:id/places/:tripPlaceId`,
   `PATCH /trips/:id/places/reorder`
+- `POST /trips/:id/hotels` — `{ hotelId }`, attaches a hotel to the trip (shows up on the map);
+  `DELETE /trips/:id/hotels/:tripHotelId`
 - `POST /trips/:id/complete` — `{ didYouDoIt: boolean, visitedTripPlaceIds?: string[], extraActivities?: string[] }`
 - `GET /places?destination=bangkok` — curated place catalog per destination
 - `GET /hotels?destination=bangkok` — curated hotel catalog (budget/mid/luxury) per destination

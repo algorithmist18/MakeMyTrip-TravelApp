@@ -51,6 +51,12 @@ export interface ExtraActivity {
   createdAt: string;
 }
 
+export interface TripHotel {
+  tripHotelId: string;
+  addedBy: { id: string; name: string; avatarColor: string } | null;
+  hotel: Hotel;
+}
+
 export interface Trip {
   id: string;
   title: string;
@@ -69,6 +75,7 @@ export interface Trip {
   dailySpendEstimate: number;
   itinerary: ItineraryItem[];
   extraActivities: ExtraActivity[];
+  hotels: TripHotel[];
 }
 
 export interface LiveHotelAvailability {

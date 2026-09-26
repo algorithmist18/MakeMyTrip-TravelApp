@@ -3,11 +3,13 @@ import { z } from "zod";
 import { prisma } from "../db";
 import { requireAuth, AuthedRequest } from "../middleware/auth";
 import {
+  addHotelToTrip,
   addPlaceToTrip,
   completeTrip,
   estimateDailySpend,
   getFullTrip,
   isTripMember,
+  removeHotelFromTrip,
   removePlaceFromTrip,
   reorderTripPlaces,
 } from "../services/tripService";
@@ -48,6 +50,11 @@ function serializeTrip(trip: NonNullable<Awaited<ReturnType<typeof getFullTrip>>
       title: a.title,
       createdAt: a.createdAt,
     })),
+    hotels: trip.hotels.map((th) => ({
+      tripHotelId: th.id,
+      addedBy: th.addedBy,
+      hotel: th.hotel,
+    })),
   };
 }
 
@@ -66,6 +73,7 @@ router.get("/", requireAuth, async (req: AuthedRequest, res) => {
       creator: { select: { id: true, name: true, email: true, avatarColor: true } },
       collaborators: { include: { user: { select: { id: true, name: true, email: true, avatarColor: true } } } },
       places: { include: { place: true, addedBy: { select: { id: true, name: true, avatarColor: true } } } },
+      hotels: { include: { hotel: true, addedBy: { select: { id: true, name: true, avatarColor: true } } } },
       extraActivities: { orderBy: { createdAt: "asc" } },
     },
   });
@@ -187,6 +195,31 @@ router.delete("/:id/places/:tripPlaceId", requireAuth, async (req: AuthedRequest
   if (!member) return res.status(404).json({ error: "Trip not found" });
 
   await removePlaceFromTrip(req.params.id, req.params.tripPlaceId);
+  const full = await getFullTrip(req.params.id);
+  const serialized = serializeTrip(full!);
+  emitToTrip(req.params.id, "trip_updated", serialized);
+  res.json({ trip: serialized });
+});
+
+router.post("/:id/hotels", requireAuth, async (req: AuthedRequest, res) => {
+  const member = await isTripMember(req.params.id, req.userId!);
+  if (!member) return res.status(404).json({ error: "Trip not found" });
+
+  const hotelId = String(req.body?.hotelId ?? "");
+  if (!hotelId) return res.status(400).json({ error: "hotelId is required" });
+
+  await addHotelToTrip(req.params.id, hotelId, req.userId!);
+  const full = await getFullTrip(req.params.id);
+  const serialized = serializeTrip(full!);
+  emitToTrip(req.params.id, "trip_updated", serialized);
+  res.status(201).json({ trip: serialized });
+});
+
+router.delete("/:id/hotels/:tripHotelId", requireAuth, async (req: AuthedRequest, res) => {
+  const member = await isTripMember(req.params.id, req.userId!);
+  if (!member) return res.status(404).json({ error: "Trip not found" });
+
+  await removeHotelFromTrip(req.params.id, req.params.tripHotelId);
   const full = await getFullTrip(req.params.id);
   const serialized = serializeTrip(full!);
   emitToTrip(req.params.id, "trip_updated", serialized);
