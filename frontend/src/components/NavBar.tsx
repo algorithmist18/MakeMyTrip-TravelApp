@@ -27,7 +27,7 @@ export default function NavBar() {
           <span className="hidden text-base font-extrabold tracking-tight sm:inline">TripCanvas</span>
         </Link>
 
-        <nav className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <nav className="hidden shrink-0 items-center gap-1 sm:flex sm:gap-2">
           {DECORATIVE_CATEGORIES.map((cat) => (
             <span
               key={cat.label}
@@ -52,11 +52,13 @@ export default function NavBar() {
           </Link>
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 pl-2 sm:gap-3">
-          <Link to="/" className="rounded-full px-2.5 py-1.5 text-xs font-medium text-white/85 hover:text-white sm:text-sm">
+        {/* Mobile-only: the essential nav links above are hidden with the decorative
+            category row on small screens, so this stays reachable without scrolling. */}
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 pl-2 sm:gap-3">
+          <Link to="/" className="rounded-full px-2 py-1.5 text-xs font-medium text-white/85 hover:text-white sm:px-2.5 sm:text-sm">
             My Trips
           </Link>
-          <Link to="/wrapped" className="rounded-full px-2.5 py-1.5 text-xs font-medium text-white/85 hover:text-white sm:text-sm">
+          <Link to="/wrapped" className="rounded-full px-2 py-1.5 text-xs font-medium text-white/85 hover:text-white sm:px-2.5 sm:text-sm">
             Wrapped
           </Link>
           {user && (
@@ -73,9 +75,10 @@ export default function NavBar() {
           <button
             onClick={newIdentity}
             title="Start over as a new person (useful for testing collaboration)"
-            className="rounded-full border border-white/20 px-2.5 py-1.5 text-xs font-medium text-white/85 hover:bg-white/10 sm:text-sm"
+            className="shrink-0 rounded-full border border-white/20 px-2 py-1.5 text-xs font-medium text-white/85 hover:bg-white/10 sm:px-2.5 sm:text-sm"
           >
-            New session
+            <span className="sm:hidden">Reset</span>
+            <span className="hidden sm:inline">New session</span>
           </button>
         </div>
       </div>
