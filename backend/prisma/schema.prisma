@@ -152,7 +152,7 @@ model Disruption {
   scenarioType    String // "flight_delay" | "hotel_overbooked" | "car_unavailable" | "activity_closed"
   label           String
   summary         String
-  planName        String // which recommended plan the user chose, e.g. "Switch to backup hotel tonight"
+  planName        String             @default("Legacy plan") // which recommended plan the user chose, e.g. "Switch to backup hotel tonight"
   totalCostDelta  Int                @default(0) // INR; positive = extra spend, negative = refund/credit
   costNote        String             @default("")
   status          String             @default("proposed") // "proposed" | "applied" | "dismissed"

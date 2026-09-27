@@ -1,9 +1,3 @@
-/*
-  Warnings:
-
-  - Added the required column `planName` to the `Disruption` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- RedefineTables
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
@@ -13,7 +7,7 @@ CREATE TABLE "new_Disruption" (
     "scenarioType" TEXT NOT NULL,
     "label" TEXT NOT NULL,
     "summary" TEXT NOT NULL,
-    "planName" TEXT NOT NULL,
+    "planName" TEXT NOT NULL DEFAULT 'Legacy plan',
     "totalCostDelta" INTEGER NOT NULL DEFAULT 0,
     "costNote" TEXT NOT NULL DEFAULT '',
     "status" TEXT NOT NULL DEFAULT 'proposed',
