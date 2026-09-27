@@ -146,15 +146,18 @@ model LocalIntel {
 }
 
 model Disruption {
-  id            String             @id @default(cuid())
-  tripId        String
-  trip          Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  scenarioType  String // "flight_delay" | "hotel_overbooked" | "car_unavailable"
-  label         String
-  summary       String
-  status        String             @default("proposed") // "proposed" | "applied" | "dismissed"
-  createdAt     DateTime           @default(now())
-  actions       DisruptionAction[]
+  id              String             @id @default(cuid())
+  tripId          String
+  trip            Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  scenarioType    String // "flight_delay" | "hotel_overbooked" | "car_unavailable" | "activity_closed"
+  label           String
+  summary         String
+  planName        String // which recommended plan the user chose, e.g. "Switch to backup hotel tonight"
+  totalCostDelta  Int                @default(0) // INR; positive = extra spend, negative = refund/credit
+  costNote        String             @default("")
+  status          String             @default("proposed") // "proposed" | "applied" | "dismissed"
+  createdAt       DateTime           @default(now())
+  actions         DisruptionAction[]
 }
 
 model DisruptionAction {
@@ -166,5 +169,7 @@ model DisruptionAction {
   detail       String
   outcome      String // "auto-resolved" | "needs-confirmation" | "at-risk"
   status       String     @default("proposed") // "proposed" | "applied"
+  costDelta    Int        @default(0) // INR; positive = extra spend, negative = refund/credit
+  costNote     String     @default("")
   order        Int        @default(0)
 }

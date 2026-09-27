@@ -104,16 +104,36 @@ export interface LocalIntelTip {
   tip: string;
 }
 
-export type DisruptionScenarioType = "flight_delay" | "hotel_overbooked" | "car_unavailable";
+export type DisruptionScenarioType = "flight_delay" | "hotel_overbooked" | "car_unavailable" | "activity_closed";
 export type DisruptionOutcome = "auto-resolved" | "needs-confirmation" | "at-risk";
 
-export interface DisruptionAction {
-  id: string;
+export interface DisruptionActionDraft {
   icon: string;
   title: string;
   detail: string;
   outcome: DisruptionOutcome;
+  costDelta?: number;
+  costNote?: string;
+}
+
+export interface DisruptionAction extends DisruptionActionDraft {
+  id: string;
   status: "proposed" | "applied";
+}
+
+export interface DisruptionPlanOption {
+  id: string;
+  name: string;
+  recommended: boolean;
+  totalCostDelta: number;
+  costNote: string;
+  actions: DisruptionActionDraft[];
+}
+
+export interface DisruptionScenarioPreview {
+  label: string;
+  summary: string;
+  options: DisruptionPlanOption[];
 }
 
 export interface Disruption {
@@ -121,6 +141,9 @@ export interface Disruption {
   scenarioType: DisruptionScenarioType;
   label: string;
   summary: string;
+  planName: string;
+  totalCostDelta: number;
+  costNote: string;
   status: "proposed" | "applied" | "dismissed";
   createdAt: string;
   actions: DisruptionAction[];

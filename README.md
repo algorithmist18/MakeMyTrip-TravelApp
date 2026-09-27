@@ -41,10 +41,12 @@ day-plan rail, tabbed itinerary/reviews/disruptions, sticky price panel — plus
    insider tips (transport, money, customs, safety, weather, connectivity) plus verified-traveler
    reviews (rating, trip type, month visited, helpful count) for every place in your itinerary.
 8. **Agentic disruption simulator** — the "Disruptions" tab lets you simulate a flight delay, a hotel
-   overbooking, or a rental car falling through, and shows a step-by-step plan of what an AI trip
-   agent would do about it — some steps auto-resolved, others flagged for your approval or as
-   at-risk — including pulling a real same-tier backup hotel from the destination's own catalog.
-   This is a rule-based simulation for demonstrating the UX, not a live agent wired to real bookings.
+   overbooking, a rental car falling through, or a booked activity closing, and the agent proposes
+   **2–3 differently-priced recommended plans** (e.g. "keep it & risk it" vs. "switch now" vs.
+   "pay a small guarantee fee") with a total ₹ cost impact per plan and per action — some steps
+   auto-resolved, others flagged for your approval or as at-risk — pulling real same-tier backup
+   hotels and swap activities from the destination's own catalog. This is a rule-based simulation for
+   demonstrating the UX, not a live agent wired to real bookings.
 
 ## Stack
 
@@ -148,8 +150,10 @@ All routes are under `/api` and (except `/auth/guest`, `/auth/signup` and `/auth
   pricing via Booking.com (503 if not configured; see below)
 - `GET /places/:id/reviews` — verified reviews for a place
 - `GET /local-intel?destination=bangkok` — insider tips for a destination
-- `GET /trips/:id/disruptions` — a trip's simulated disruptions and their action plans
-- `POST /trips/:id/disruptions/simulate` — `{ scenarioType: "flight_delay"|"hotel_overbooked"|"car_unavailable", delayHours? }`
+- `GET /trips/:id/disruptions` — a trip's chosen disruption plans and their actions/costs
+- `POST /trips/:id/disruptions/simulate` — `{ scenarioType: "flight_delay"|"hotel_overbooked"|"car_unavailable"|"activity_closed", delayHours? }`,
+  returns 2–3 candidate plans with a ₹ cost breakdown each; writes nothing to the DB yet
+- `POST /trips/:id/disruptions/choose` — same body plus `{ optionId }`, persists the picked plan
 - `POST /trips/:id/disruptions/:disruptionId/apply` / `.../dismiss`
 - `GET /wrapped` — years that have confirmed trips; `GET /wrapped/:year` — full recap for a year
 
@@ -218,10 +222,14 @@ almost everyone running this project.
   file — add more by giving each a `destination`, `category` (`weather`/`money`/`transport`/`custom`/
   `safety`/`connectivity`), `title`, and `tip`.
 - **Disruptions** are computed live, not seeded — `backend/src/services/disruptionService.ts` holds
-  the rule-based logic for each scenario (`flight_delay`, `hotel_overbooked`, `car_unavailable`).
-  Each simulation is persisted as a `Disruption` + its `DisruptionAction`s so the plan survives a
-  page reload. To add a new scenario, extend `ScenarioType`, add a branch in `simulateDisruption()`,
-  and add it to `SCENARIOS` in `frontend/src/components/DisruptionsTab.tsx`.
+  the rule-based logic for each scenario (`flight_delay`, `hotel_overbooked`, `car_unavailable`,
+  `activity_closed`). `buildScenario()` returns 2–3 `PlanOption`s per scenario, each with its own
+  actions and a `costDelta` in ₹ (positive = extra spend, negative = refund/credit) computed from the
+  trip's real hotel price, travel style, and remaining nights. `POST /simulate` just previews these
+  (nothing written yet); `POST /choose` recomputes the same scenario and persists whichever option the
+  user picked as a `Disruption` + its `DisruptionAction`s, so the plan survives a page reload. To add
+  a new scenario, extend `ScenarioType`, add a `buildXScenario()` function, wire it into
+  `buildScenario()`, and add it to `SCENARIOS` in `frontend/src/components/DisruptionsTab.tsx`.
 
 ## Adding more travel styles
 
