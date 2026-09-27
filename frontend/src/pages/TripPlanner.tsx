@@ -34,9 +34,15 @@ export default function TripPlanner() {
   const [busy, setBusy] = useState(false);
   const [activeDay, setActiveDay] = useState<number | "all">("all");
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [showCompletion, setShowCompletion] = useState(false);
   const [showCircuit, setShowCircuit] = useState(false);
   const [activeTab, setActiveTab] = useState<PlannerTab>("itinerary");
+
+  function friendlyError(err: any) {
+    return err?.response?.data?.error ?? "Something went wrong — please try again.";
+  }
 
   const applyTrip = useCallback((next: Trip) => setTrip(next), []);
   useTripSocket(tripId, applyTrip);
@@ -56,8 +62,12 @@ export default function TripPlanner() {
         if (cancelled) return;
         setPlaces(placesRes.data.places);
         setHotels(hotelsRes.data.hotels);
-      } catch {
-        setNotFound(true);
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          setNotFound(true);
+        } else {
+          setLoadError(friendlyError(err));
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -108,9 +118,12 @@ export default function TripPlanner() {
   async function handleAddPlace(place: Place) {
     if (!trip) return;
     setBusy(true);
+    setActionError(null);
     try {
       await api.post(`/trips/${trip.id}/places`, { placeId: place.id, day: 1 });
       await refresh();
+    } catch (err: any) {
+      setActionError(friendlyError(err));
     } finally {
       setBusy(false);
     }
@@ -126,9 +139,12 @@ export default function TripPlanner() {
   async function handleRemoveByTripPlaceId(tripPlaceId: string) {
     if (!trip) return;
     setBusy(true);
+    setActionError(null);
     try {
       await api.delete(`/trips/${trip.id}/places/${tripPlaceId}`);
       await refresh();
+    } catch (err: any) {
+      setActionError(friendlyError(err));
     } finally {
       setBusy(false);
     }
@@ -137,9 +153,12 @@ export default function TripPlanner() {
   async function handleAddHotel(hotel: Hotel) {
     if (!trip) return;
     setBusy(true);
+    setActionError(null);
     try {
       await api.post(`/trips/${trip.id}/hotels`, { hotelId: hotel.id });
       await refresh();
+    } catch (err: any) {
+      setActionError(friendlyError(err));
     } finally {
       setBusy(false);
     }
@@ -150,9 +169,12 @@ export default function TripPlanner() {
     const entry = trip.hotels.find((h) => h.hotel.id === hotel.id);
     if (!entry) return;
     setBusy(true);
+    setActionError(null);
     try {
       await api.delete(`/trips/${trip.id}/hotels/${entry.tripHotelId}`);
       await refresh();
+    } catch (err: any) {
+      setActionError(friendlyError(err));
     } finally {
       setBusy(false);
     }
@@ -166,6 +188,7 @@ export default function TripPlanner() {
     if (swapIdx < 0 || swapIdx >= sameDay.length) return;
     const other = sameDay[swapIdx];
     setBusy(true);
+    setActionError(null);
     try {
       await api.patch(`/trips/${trip.id}/places/reorder`, {
         items: [
@@ -174,6 +197,8 @@ export default function TripPlanner() {
         ],
       });
       await refresh();
+    } catch (err: any) {
+      setActionError(friendlyError(err));
     } finally {
       setBusy(false);
     }
@@ -186,6 +211,7 @@ export default function TripPlanner() {
   async function handleOptimize() {
     if (!trip || !trip.destinationLat || !trip.destinationLng) return;
     setBusy(true);
+    setActionError(null);
     try {
       const items: { tripPlaceId: string; day: number; order: number }[] = [];
       const byDay = new Map<number, ItineraryItem[]>();
@@ -208,6 +234,8 @@ export default function TripPlanner() {
       }
       await api.patch(`/trips/${trip.id}/places/reorder`, { items });
       await refresh();
+    } catch (err: any) {
+      setActionError(friendlyError(err));
     } finally {
       setBusy(false);
     }
@@ -222,9 +250,12 @@ export default function TripPlanner() {
   async function handleStyleChange(style: TravelStyle) {
     if (!trip) return;
     setBusy(true);
+    setActionError(null);
     try {
       await api.patch(`/trips/${trip.id}`, { travelStyle: style });
       await refresh();
+    } catch (err: any) {
+      setActionError(friendlyError(err));
     } finally {
       setBusy(false);
     }
@@ -254,6 +285,18 @@ export default function TripPlanner() {
         <p className="text-lg font-semibold text-ink-900">Trip not found</p>
         <button onClick={() => navigate("/")} className="mt-4 text-brand-600 hover:underline">
           Back to my trips
+        </button>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-lg font-semibold text-ink-900">Couldn't load this trip</p>
+        <p className="mt-2 text-sm text-ink-500">{loadError}</p>
+        <button onClick={() => window.location.reload()} className="mt-4 text-brand-600 hover:underline">
+          Try again
         </button>
       </div>
     );
@@ -334,6 +377,15 @@ export default function TripPlanner() {
             </button>
           ))}
         </div>
+
+        {actionError && (
+          <div className="mt-4 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <span>{actionError}</span>
+            <button onClick={() => setActionError(null)} className="shrink-0 font-semibold hover:underline">
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {activeTab === "itinerary" && (
           <div className="mt-6 flex flex-col gap-6 lg:flex-row">
